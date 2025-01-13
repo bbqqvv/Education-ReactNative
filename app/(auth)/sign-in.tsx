@@ -51,18 +51,24 @@ export default function LoginPage() {
   }, []);
 
   return (
-    <SafeAreaView className="flex-1 justify-center items-center bg-gray-100">
-      <View className="w-11/12 max-w-md p-5 bg-white rounded-lg shadow-md">
-        <Text className="text-2xl font-bold text-gray-800 mb-5 text-center">
-          Login to Your Account
+    <SafeAreaView className="flex-1 justify-center items-center bg-white">
+      <View className="w-11/12 max-w-md p-5 bg-white rounded-lg">
+        <Text className="text-2xl font-bold text-cyan-500 mb-5 text-center">
+          Chào mừng
+        </Text>
+        <Text className="text-xl font-bold text-black mb-1 m-1">
+          Đăng nhập 
+        </Text>
+        <Text className="text-sm text-gray-600 mb-10">
+          Chào mừng bạn đến với lớp học của Văn Quốc Bùi, vui lòng nhập thông tin để đăng nhập bên dưới
         </Text>
 
         {/* Username Input */}
         <View className="mb-4">
-          <Text className="text-sm text-gray-600 mb-1">Username</Text>
+          <Text className="text-sm text-gray-600 mb-1">Email</Text>
           <TextInput
-            className="bg-gray-100 border border-gray-300 rounded p-2 text-base text-gray-800"
-            placeholder="Enter your username"
+            className="bg-gray-100 border p-3 border-gray-300 rounded-xl p-2 text-base text-gray-800"
+            placeholder="Nhập email"
             value={username}
             onChangeText={setUsername}
             autoCapitalize="none"
@@ -71,11 +77,11 @@ export default function LoginPage() {
 
         {/* Password Input */}
         <View className="mb-4">
-          <Text className="text-sm text-gray-600 mb-1">Password</Text>
+          <Text className="text-sm text-gray-600 mb-1">Mật khẩu</Text>
           <View className="flex-row items-center">
             <TextInput
-              className="flex-1 bg-gray-100 border border-gray-300 rounded p-2 text-base text-gray-800"
-              placeholder="Enter your password"
+              className="flex-1 p-3 bg-gray-100 border border-gray-300 rounded-xl p-2 text-base text-gray-800"
+              placeholder="Nhập mật khẩu của bạn"
               value={password}
               onChangeText={setPassword}
               secureTextEntry={!showPassword}
@@ -91,11 +97,14 @@ export default function LoginPage() {
               />
             </TouchableOpacity>
           </View>
+          <TouchableOpacity onPress={() => router.push("/forgot-password")}>
+            <Text className="text-sm text-black mt-2 text-right">Quên mật khẩu</Text>
+          </TouchableOpacity>
         </View>
 
         {/* Submit Button */}
         <TouchableOpacity
-          className={`bg-blue-500 py-3 rounded justify-center items-center mt-5 ${loading ? "bg-gray-400" : ""
+          className={`bg-cyan-500 py-3 rounded-xl justify-center items-center mt-5 ${loading ? "bg-gray-400" : ""
             }`}
           onPress={handleSubmit}
           disabled={loading}
@@ -103,7 +112,7 @@ export default function LoginPage() {
           {loading ? (
             <ActivityIndicator size="small" color="#fff" />
           ) : (
-            <Text className="text-white text-base font-semibold">Login</Text>
+            <Text className="text-white text-base font-semibold">Đăng nhập</Text>
           )}
         </TouchableOpacity>
 
@@ -116,9 +125,9 @@ export default function LoginPage() {
 
         {/* Footer Link */}
         <Text className="text-sm text-gray-600 mt-5 text-center">
-          Don't have an account?{" "}
-          <Link href="/(auth)/sign-up" className="text-blue-500 font-semibold">
-            Sign Up
+          Chưa có tài khoản?{" "}
+          <Link href="/(auth)/sign-up" className="text-cyan-500 font-semibold">
+            Đăng ký
           </Link>
         </Text>
       </View>
