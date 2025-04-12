@@ -1,5 +1,11 @@
 import { useState, useRef } from "react";
-import { View, Text, TextInput, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+} from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -8,10 +14,8 @@ export default function OTPVerification() {
   const [otp, setOtp] = useState(["", "", "", "", ""]);
   const inputRefs = useRef([]);
 
-  // Xử lý nhập từng số
   const handleChange = (text, index) => {
     if (text.length > 1) {
-      // Nếu paste nhiều số, chỉ lấy số đầu tiên
       text = text[0];
     }
 
@@ -19,18 +23,15 @@ export default function OTPVerification() {
     newOtp[index] = text;
     setOtp(newOtp);
 
-    // Tự động chuyển đến ô tiếp theo khi nhập
     if (text && index < otp.length - 1) {
       inputRefs.current[index + 1].focus();
     }
 
-    // Tự động submit nếu đã nhập đủ
     if (newOtp.every((num) => num !== "")) {
       handleSubmit();
     }
   };
 
-  // Xử lý xóa và quay lại ô trước
   const handleKeyPress = (e, index) => {
     if (e.nativeEvent.key === "Backspace" && !otp[index] && index > 0) {
       inputRefs.current[index - 1].focus();
@@ -44,39 +45,29 @@ export default function OTPVerification() {
   };
 
   return (
-    <View className="flex items-center justify-center min-h-screen bg-white px-6 relative">
-      {/* Nút quay lại */}
-      <TouchableOpacity
-        onPress={() => router.back()}
-        className="absolute top-10 left-4 p-2 rounded-full bg-gray-100"
-      >
+    <View style={styles.container}>
+      {/* Back button */}
+      <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
         <Ionicons name="chevron-back" size={24} color="black" />
       </TouchableOpacity>
 
-      <View className="w-full max-w-sm mt-6">
-        {/* Tiêu đề */}
-        <Text className="text-2xl font-bold text-center">
-          Kiểm tra Email của bạn
-        </Text>
-        <Text className="text-gray-500 mt-2 text-center">
+      <View style={styles.contentContainer}>
+        {/* Title */}
+        <Text style={styles.title}>Kiểm tra Email của bạn</Text>
+        <Text style={styles.subtitle}>
           Chúng tôi đã gửi mã gồm 5 số vào email của bạn
         </Text>
 
-        {/* Ô nhập OTP */}
-        <View className="flex flex-row justify-between mt-6 px-4">
+        {/* OTP Inputs */}
+        <View style={styles.otpContainer}>
           {otp.map((digit, index) => (
             <TextInput
               key={index}
               ref={(ref) => (inputRefs.current[index] = ref)}
-              style={{
-                width: 50,
-                height: 50,
-                borderWidth: 1,
-                borderRadius: 10,
-                textAlign: "center",
-                fontSize: 18,
-                borderColor: digit ? "#63BAD5" : "#ccc",
-              }}
+              style={[
+                styles.otpInput,
+                digit ? styles.otpInputFilled : styles.otpInputEmpty,
+              ]}
               maxLength={1}
               keyboardType="numeric"
               value={digit}
@@ -87,25 +78,106 @@ export default function OTPVerification() {
           ))}
         </View>
 
-        {/* Nút xác minh */}
+        {/* Verify Button */}
         <TouchableOpacity
           onPress={handleSubmit}
-          className={`mt-6 p-4 rounded-lg w-full ${
-            otp.every((num) => num !== "") ? "bg-[#63BAD5]" : "bg-gray-300"
-          }`}
+          style={[
+            styles.verifyButton,
+            otp.every((num) => num !== "")
+              ? styles.verifyButtonActive
+              : styles.verifyButtonDisabled,
+          ]}
           disabled={otp.some((num) => num === "")}
         >
-          <Text className="text-white font-semibold text-lg text-center">
-            Xác minh mã
-          </Text>
+          <Text style={styles.verifyButtonText}>Xác minh mã</Text>
         </TouchableOpacity>
 
-        {/* Gửi lại mã */}
-        <Text className="text-gray-500 text-center mt-4">
-          Bạn chưa nhận được SMS?{" "}
-          <Text className="text-blue-500 font-semibold">Gửi lại</Text>
+        {/* Resend Code */}
+        <Text style={styles.resendText}>
+          Bạn chưa nhận được SMS? <Text style={styles.resendLink}>Gửi lại</Text>
         </Text>
       </View>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "white",
+    paddingHorizontal: 24,
+    position: "relative",
+  },
+  backButton: {
+    position: "absolute",
+    top: 40,
+    left: 16,
+    padding: 8,
+    borderRadius: 999,
+    backgroundColor: "#f3f4f6",
+  },
+  contentContainer: {
+    width: "100%",
+    maxWidth: 384,
+    marginTop: 24,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    textAlign: "center",
+  },
+  subtitle: {
+    color: "#6b7280",
+    marginTop: 8,
+    textAlign: "center",
+  },
+  otpContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 24,
+    paddingHorizontal: 16,
+  },
+  otpInput: {
+    width: 50,
+    height: 50,
+    borderWidth: 1,
+    borderRadius: 10,
+    textAlign: "center",
+    fontSize: 18,
+  },
+  otpInputEmpty: {
+    borderColor: "#ccc",
+  },
+  otpInputFilled: {
+    borderColor: "#63BAD5",
+  },
+  verifyButton: {
+    marginTop: 24,
+    padding: 16,
+    borderRadius: 8,
+    width: "100%",
+  },
+  verifyButtonActive: {
+    backgroundColor: "#63BAD5",
+  },
+  verifyButtonDisabled: {
+    backgroundColor: "#e5e7eb",
+  },
+  verifyButtonText: {
+    color: "white",
+    fontWeight: "600",
+    fontSize: 18,
+    textAlign: "center",
+  },
+  resendText: {
+    color: "#6b7280",
+    textAlign: "center",
+    marginTop: 16,
+  },
+  resendLink: {
+    color: "#3b82f6",
+    fontWeight: "600",
+  },
+});

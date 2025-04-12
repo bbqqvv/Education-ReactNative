@@ -1,5 +1,11 @@
 import { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+} from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -13,38 +19,33 @@ export default function NewPassword() {
   const [isPasswordFocused, setIsPasswordFocused] = useState(false);
   const [isConfirmFocused, setIsConfirmFocused] = useState(false);
 
+  const isSubmitDisabled =
+    !password || !confirmPassword || password !== confirmPassword;
+
   return (
-    <View className="flex items-center justify-center min-h-screen bg-white px-6 relative">
-      {/* Nút quay lại */}
-      <TouchableOpacity
-        onPress={() => router.back()}
-        className="absolute top-10 left-4 p-2 rounded-full bg-gray-100"
-      >
+    <View style={styles.container}>
+      {/* Back button */}
+      <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
         <Ionicons name="chevron-back" size={24} color="black" />
       </TouchableOpacity>
 
-      <View className="w-full max-w-sm mt-6">
-        {/* Tiêu đề */}
-        <Text className="text-2xl font-bold">Đặt mật khẩu mới</Text>
-        <Text className="text-gray-500 mt-2">
+      <View style={styles.contentContainer}>
+        {/* Title */}
+        <Text style={styles.title}>Đặt mật khẩu mới</Text>
+        <Text style={styles.subtitle}>
           Tạo mật khẩu mới. Đảm bảo nó khác với những cái trước để bảo mật.
         </Text>
 
-        {/* Mật khẩu */}
-        <Text className="font-semibold mt-6">Mật Khẩu</Text>
+        {/* Password */}
+        <Text style={styles.label}>Mật Khẩu</Text>
         <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            padding: 16,
-            marginTop: 8,
-            borderRadius: 10,
-            borderWidth: 1,
-            borderColor: isPasswordFocused ? "#FFA500" : "#D1D5DB", // Viền vàng cam khi focus
-          }}
+          style={[
+            styles.inputContainer,
+            isPasswordFocused && styles.focusedInput,
+          ]}
         >
           <TextInput
-            style={{ flex: 1, outlineStyle: "none" }} // Xóa viền vàng bên trong
+            style={styles.input}
             placeholder="Nhập mật khẩu mới của bạn"
             placeholderTextColor="gray"
             secureTextEntry={!isPasswordVisible}
@@ -64,21 +65,16 @@ export default function NewPassword() {
           </TouchableOpacity>
         </View>
 
-        {/* Nhập lại mật khẩu */}
-        <Text className="font-semibold mt-4">Nhập Lại Mật Khẩu</Text>
+        {/* Confirm Password */}
+        <Text style={styles.label}>Nhập Lại Mật Khẩu</Text>
         <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            padding: 16,
-            marginTop: 8,
-            borderRadius: 10,
-            borderWidth: 1,
-            borderColor: isConfirmFocused ? "#FFA500" : "#D1D5DB", // Viền vàng cam khi focus
-          }}
+          style={[
+            styles.inputContainer,
+            isConfirmFocused && styles.focusedInput,
+          ]}
         >
           <TextInput
-            style={{ flex: 1, outlineStyle: "none" }} // Xóa viền vàng bên trong
+            style={styles.input}
             placeholder="Nhập lại mật khẩu"
             placeholderTextColor="gray"
             secureTextEntry={!isConfirmPasswordVisible}
@@ -102,23 +98,88 @@ export default function NewPassword() {
           </TouchableOpacity>
         </View>
 
-        {/* Nút cập nhật */}
+        {/* Update button */}
         <TouchableOpacity
           onPress={() => router.push("/result-forgot")}
-          disabled={
-            !password || !confirmPassword || password !== confirmPassword
-          }
-          className={`mt-6 p-4 rounded-lg w-full ${
-            password && confirmPassword && password === confirmPassword
-              ? "bg-[#63BAD5]"
-              : "bg-[#CFE9F1]"
-          }`}
+          disabled={isSubmitDisabled}
+          style={[
+            styles.submitButton,
+            isSubmitDisabled ? styles.disabledButton : styles.activeButton,
+          ]}
         >
-          <Text className="text-white font-semibold text-lg text-center">
-            Cập nhật mật khẩu
-          </Text>
+          <Text style={styles.submitButtonText}>Cập nhật mật khẩu</Text>
         </TouchableOpacity>
       </View>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "white",
+    paddingHorizontal: 24,
+    position: "relative",
+  },
+  backButton: {
+    position: "absolute",
+    top: 40,
+    left: 16,
+    padding: 8,
+    borderRadius: 999,
+    backgroundColor: "#f3f4f6",
+  },
+  contentContainer: {
+    width: "100%",
+    maxWidth: 384,
+    marginTop: 24,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+  },
+  subtitle: {
+    color: "#6b7280",
+    marginTop: 8,
+  },
+  label: {
+    fontWeight: "600",
+    marginTop: 24,
+  },
+  inputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 16,
+    marginTop: 8,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#D1D5DB",
+  },
+  focusedInput: {
+    borderColor: "#FFA500",
+  },
+  input: {
+    flex: 1,
+    outlineStyle: "none",
+  },
+  submitButton: {
+    marginTop: 24,
+    padding: 16,
+    borderRadius: 8,
+    width: "100%",
+  },
+  activeButton: {
+    backgroundColor: "#63BAD5",
+  },
+  disabledButton: {
+    backgroundColor: "#CFE9F1",
+  },
+  submitButtonText: {
+    color: "white",
+    fontWeight: "600",
+    fontSize: 18,
+    textAlign: "center",
+  },
+});

@@ -1,4 +1,10 @@
-import { View, Text, TextInput, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+} from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
@@ -29,28 +35,23 @@ export default function ForgotPassword() {
   };
 
   return (
-    <View className="flex-1 items-center justify-center bg-white px-6 relative">
+    <View style={styles.container}>
       {/* Nút quay lại*/}
-      <TouchableOpacity
-        onPress={() => router.back()}
-        className="absolute top-10 left-4 p-2 rounded-full bg-gray-100"
-      >
+      <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
         <Ionicons name="chevron-back" size={24} color="black" />
       </TouchableOpacity>
 
-      <View className="w-full max-w-sm mt-6">
+      <View style={styles.contentContainer}>
         {/* Tiêu đề */}
-        <Text className="text-2xl font-bold">Quên mật khẩu</Text>
-        <Text className="text-gray-500 mt-2">
+        <Text style={styles.title}>Quên mật khẩu</Text>
+        <Text style={styles.subtitle}>
           Vui lòng nhập email để đặt lại mật khẩu
         </Text>
 
         {/* Ô nhập email */}
-        <Text className="font-semibold mt-6">Email</Text>
+        <Text style={styles.label}>Email</Text>
         <TextInput
-          className={`w-full border ${
-            emailError ? "border-red-500" : "border-gray-300"
-          } rounded-lg p-4 mt-2`}
+          style={[styles.input, emailError && styles.inputError]}
           placeholder="Nhập email"
           value={email}
           onChangeText={(text) => {
@@ -60,18 +61,78 @@ export default function ForgotPassword() {
           keyboardType="email-address"
           autoCapitalize="none"
         />
-        {emailError && <Text className="text-red-500 mt-1">{emailError}</Text>}
+        {emailError && <Text style={styles.errorText}>{emailError}</Text>}
 
         {/* Nút đặt lại mật khẩu */}
-        <TouchableOpacity
-          onPress={handleSubmit}
-          className="mt-6 bg-[#63BAD5] p-4 rounded-lg w-full"
-        >
-          <Text className="text-white font-semibold text-lg text-center">
-            Đặt Lại Mật khẩu
-          </Text>
+        <TouchableOpacity onPress={handleSubmit} style={styles.submitButton}>
+          <Text style={styles.submitButtonText}>Đặt Lại Mật khẩu</Text>
         </TouchableOpacity>
       </View>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "white",
+    paddingHorizontal: 24,
+    position: "relative",
+  },
+  backButton: {
+    position: "absolute",
+    top: 40,
+    left: 16,
+    padding: 8,
+    borderRadius: 999,
+    backgroundColor: "#f3f4f6",
+  },
+  contentContainer: {
+    width: "100%",
+    maxWidth: 384,
+    marginTop: 24,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    lineHeight: 32,
+  },
+  subtitle: {
+    color: "#6b7280",
+    marginTop: 8,
+  },
+  label: {
+    fontWeight: "600",
+    marginTop: 24,
+  },
+  input: {
+    width: "100%",
+    borderWidth: 1,
+    borderColor: "#d1d5db",
+    borderRadius: 8,
+    padding: 16,
+    marginTop: 8,
+  },
+  inputError: {
+    borderColor: "#ef4444",
+  },
+  errorText: {
+    color: "#ef4444",
+    marginTop: 4,
+  },
+  submitButton: {
+    marginTop: 24,
+    backgroundColor: "#63BAD5",
+    padding: 16,
+    borderRadius: 8,
+    width: "100%",
+  },
+  submitButtonText: {
+    color: "white",
+    fontWeight: "600",
+    fontSize: 18,
+    textAlign: "center",
+  },
+});
