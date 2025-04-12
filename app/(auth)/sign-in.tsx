@@ -56,11 +56,10 @@ export default function LoginPage() {
         <Text className="text-2xl font-bold text-cyan-500 mb-5 text-center">
           Chào mừng
         </Text>
-        <Text className="text-xl font-bold text-black mb-1 m-1">
-          Đăng nhập 
-        </Text>
+        <Text className="text-xl font-bold text-black mb-1 m-1">Đăng nhập</Text>
         <Text className="text-sm text-gray-600 mb-10">
-          Chào mừng bạn đến với lớp học của Văn Quốc Bùi, vui lòng nhập thông tin để đăng nhập bên dưới
+          Chào mừng bạn đến với lớp học của Văn Quốc Bùi, vui lòng nhập thông
+          tin để đăng nhập bên dưới
         </Text>
 
         {/* Username Input */}
@@ -97,22 +96,29 @@ export default function LoginPage() {
               />
             </TouchableOpacity>
           </View>
-          <TouchableOpacity onPress={() => router.push("/forgot-password")}>
-            <Text className="text-sm text-black mt-2 text-right">Quên mật khẩu</Text>
+          <TouchableOpacity
+            onPress={() => router.push("/ForgotPasswordScreen")}
+          >
+            <Text className="text-sm text-black mt-2 text-right">
+              Quên mật khẩu
+            </Text>
           </TouchableOpacity>
         </View>
 
         {/* Submit Button */}
         <TouchableOpacity
-          className={`bg-cyan-500 py-3 rounded-xl justify-center items-center mt-5 ${loading ? "bg-gray-400" : ""
-            }`}
+          className={`bg-cyan-500 py-3 rounded-xl justify-center items-center mt-5 ${
+            loading ? "bg-gray-400" : ""
+          }`}
           onPress={handleSubmit}
           disabled={loading}
         >
           {loading ? (
             <ActivityIndicator size="small" color="#fff" />
           ) : (
-            <Text className="text-white text-base font-semibold">Đăng nhập</Text>
+            <Text className="text-white text-base font-semibold">
+              Đăng nhập
+            </Text>
           )}
         </TouchableOpacity>
 
