@@ -25,7 +25,7 @@ const EduOption = () => {
           {/* Student Button */}
           <TouchableOpacity
             style={[styles.button, styles.studentButton]}
-            onPress={() => router.push("/(auth)/sign-in")}
+            onPress={() => router.push("/(auth)/sign-in/SignIn")}
             activeOpacity={0.7}
           >
             <Text style={styles.buttonText}>Tôi là Học sinh</Text>
@@ -34,7 +34,7 @@ const EduOption = () => {
           {/* Teacher Button */}
           <TouchableOpacity
             style={[styles.button, styles.teacherButton]}
-            onPress={() => router.push("/(auth)/sign-in")}
+            onPress={() => router.push("/(auth)/sign-in/SignIn")}
             activeOpacity={0.7}
           >
             <Text style={styles.buttonText}>Tôi là Giáo viên</Text>

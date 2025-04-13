@@ -50,7 +50,7 @@ export default function LoginPage() {
     try {
       const response = await handleLogin(username, password);
       if (response?.token) {
-        router.replace("/(tabs)/home");
+        router.replace("/(tabs)/Home");
       }
     } catch (err) {
       console.error("Login failed", err);
@@ -107,7 +107,7 @@ export default function LoginPage() {
             </TouchableOpacity>
           </View>
           <TouchableOpacity
-            onPress={() => router.push("/ForgotPasswordScreen")}
+            onPress={() => router.push("/forgot-password/ForgotPasswordScreen")}
           >
             <Text style={styles.forgotPassword}>Quên mật khẩu</Text>
           </TouchableOpacity>
@@ -134,7 +134,7 @@ export default function LoginPage() {
         {/* Footer Link */}
         <Text style={styles.footerText}>
           Chưa có tài khoản?{" "}
-          <Link href="/(auth)/sign-up" style={styles.signupLink}>
+          <Link href="/(auth)/sign-up/SignUp" style={styles.signupLink}>
             Đăng ký
           </Link>
         </Text>

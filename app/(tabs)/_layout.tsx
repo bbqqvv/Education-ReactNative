@@ -34,7 +34,7 @@ export default function Layout() {
       }}
     >
       <Tabs.Screen
-        name="home"
+        name="Home"
         options={{
           title: 'Trang chủ',
           tabBarIcon: ({ focused, color }) => (
@@ -51,15 +51,14 @@ export default function Layout() {
           tabPress: animateTabPress,
         }}
       />
-
       <Tabs.Screen
-        name="mission"
+        name="ChatAi"
         options={{
-          title: 'Nhiệm vụ',
+          title: 'Chat Bot',
           tabBarIcon: ({ focused, color }) => (
             <Animated.View style={{ transform: [{ scale: focused ? scaleValue : 1 }] }}>
               <Ionicons
-                name={focused ? 'rocket' : 'rocket-outline'}
+                name={focused ? 'chatbubbles' : 'chatbubbles-outline'}
                 size={24}
                 color={color}
               />
@@ -72,7 +71,7 @@ export default function Layout() {
       />
 
       <Tabs.Screen
-        name="message"
+        name="Message"
         options={{
           title: 'Tin nhắn',
           tabBarIcon: ({ focused, color }) => (
@@ -91,7 +90,7 @@ export default function Layout() {
       />
 
       <Tabs.Screen
-        name="setting"
+        name="Setting"
         options={{
           title: 'Cài đặt',
           tabBarIcon: ({ focused, color }) => (

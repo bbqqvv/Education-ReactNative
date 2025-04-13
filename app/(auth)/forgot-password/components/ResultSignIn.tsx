@@ -8,25 +8,24 @@ export default function SuccessScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.contentContainer}>
-        {/* Icon Check */}
-        <View style={styles.iconContainer}>
+      <View style={styles.card}>
+        {/* Success Icon */}
+        <View style={styles.iconCircle}>
           <Ionicons name="checkmark" size={40} color="#63BAD5" />
         </View>
 
-        {/* Title */}
-        <Text style={styles.title}>Thành Công</Text>
-        <Text style={styles.subtitle}>
-          Chúc mừng! Mật khẩu của bạn đã{"\n"}được thay đổi. Nhấn tiếp tục đăng
-          nhập.
+        {/* Success Message */}
+        <Text style={styles.header}>Thành Công</Text>
+        <Text style={styles.message}>
+          Chúc mừng! Bạn đã đăng kí thành công. Nhấn tiếp tục đăng nhập.
         </Text>
 
         {/* Login Button */}
         <TouchableOpacity
-          style={styles.loginButton}
-          onPress={() => router.push("/sign-in")}
+          style={styles.button}
+          onPress={() => router.push("/(auth)/sign-in/SignIn")}
         >
-          <Text style={styles.loginButtonText}>Trở về trang đăng nhập</Text>
+          <Text style={styles.buttonText}>Trở về trang đăng nhập</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -34,51 +33,60 @@ export default function SuccessScreen() {
 }
 
 const styles = StyleSheet.create({
+  // Layout styles
   container: {
     flex: 1,
-    backgroundColor: "white",
+    backgroundColor: "#FFFFFF",
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 24,
   },
-  contentContainer: {
+  card: {
     width: "100%",
     maxWidth: 384,
     alignItems: "center",
   },
-  iconContainer: {
+
+  // Icon styles
+  iconCircle: {
     width: 80,
     height: 80,
+    borderRadius: 40,
     borderWidth: 2,
     borderColor: "#63BAD5",
-    borderRadius: 40,
     justifyContent: "center",
     alignItems: "center",
-    aspectRatio: 1,
   },
-  title: {
+
+  // Text styles
+  header: {
     fontSize: 20,
     fontWeight: "bold",
     marginTop: 24,
+    color: "#000000",
   },
-  subtitle: {
-    color: "#6b7280",
+  message: {
+    fontSize: 14,
+    color: "#6B7280",
     textAlign: "center",
     marginTop: 8,
     lineHeight: 20,
   },
-  loginButton: {
+
+  // Button styles
+  button: {
     marginTop: 24,
-    padding: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
     width: "100%",
+    maxWidth: 320,
     backgroundColor: "#63BAD5",
     borderRadius: 8,
-    maxWidth: 320,
+    alignItems: "center",
   },
-  loginButtonText: {
-    color: "white",
+  buttonText: {
+    fontSize: 16,
     fontWeight: "600",
-    fontSize: 18,
-    textAlign: "center",
+    color: "#FFFFFF",
   },
 });

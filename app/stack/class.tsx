@@ -19,11 +19,11 @@ const data = Array(6).fill({
 });
 
 const Class = () => {
-  
-    const router = useRouter();
+
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState('student');
   const handleFeaturePress = () => {
-      router.push('/home'); // Giả sử bạn đã đăng ký màn hình này
+    router.push('/(tabs)/Home'); // Navigate back to the home screen
   };
 
 
@@ -32,7 +32,7 @@ const Class = () => {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity>
-          <Ionicons name="arrow-back" size={24} color="white" onPress={handleFeaturePress}/>
+          <Ionicons name="arrow-back" size={24} color="white" onPress={handleFeaturePress} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Lớp học của tôi</Text>
         <TouchableOpacity>

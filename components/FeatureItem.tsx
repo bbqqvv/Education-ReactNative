@@ -16,10 +16,10 @@ const FeatureItem: React.FC<FeatureItemProps> = ({ icon, label, onPress }) => {
     <TouchableOpacity onPress={handlePress} style={styles.touchable}>
       <View style={styles.container}>
         <View style={styles.borderFeatures}>
-          <Image 
-            source={icon} 
-            style={styles.icon} 
-            resizeMode="contain" 
+          <Image
+            source={icon}
+            style={styles.icon}
+            resizeMode="contain"
             accessibilityLabel={label}
           />
         </View>
@@ -57,7 +57,6 @@ const styles = StyleSheet.create({
   icon: {
     width: 45,
     height: 45,
-    tintColor: '#59CBE8', // Màu icon
   },
   label: {
     textAlign: "center",

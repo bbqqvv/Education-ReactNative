@@ -31,9 +31,9 @@ const Setting = () => {
 
       {/* Menu cài đặt */}
       <View style={styles.menuContainer}>
-        <MenuItem icon="settings-outline" text="Cài Đặt Chung" />
-        <MenuItem icon="information-circle-outline" text="Hướng Dẫn Sử Dụng" bold />
-        <MenuItem icon="log-out-outline" text="Đăng Xuất" onPress={handleLogout} />
+        <MenuItem icon="settings-outline" text="Cài Đặt Chung" onPress={undefined} bold={undefined} />
+        <MenuItem icon="information-circle-outline" text="Hướng Dẫn Sử Dụng" bold onPress={undefined} />
+        <MenuItem icon="log-out-outline" text="Đăng Xuất" onPress={handleLogout} bold={undefined} />
       </View>
     </View>
   );

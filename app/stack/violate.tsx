@@ -18,7 +18,7 @@ const ViolationDetail = () => {
 
   // Chuyển đổi level thành tiếng Việt
   const getViolationLevel = (level) => {
-    switch(level) {
+    switch (level) {
       case 'LOW': return 'Nhẹ';
       case 'MEDIUM': return 'Trung bình';
       case 'HIGH': return 'Nặng';
@@ -34,14 +34,14 @@ const ViolationDetail = () => {
 
   const router = useRouter();
   const handleFeaturePress = () => {
-        router.push("/home");
-    }
+    router.push('/(tabs)/Home'); // Navigate back to the home screen
+  }
 
   return (
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Ionicons name="arrow-back" size={24} color="white" onPress={handleFeaturePress}/>
+        <Ionicons name="arrow-back" size={24} color="white" onPress={handleFeaturePress} />
         <Text style={styles.headerTitle}>Chi tiết vi phạm</Text>
         <View style={{ width: 24 }} />
       </View>
