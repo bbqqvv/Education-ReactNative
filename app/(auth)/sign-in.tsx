@@ -13,11 +13,24 @@ import { Link, router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
 export default function LoginPage() {
-  const { handleLogin, loading, error } = useAuth();
+  const { loading, error } = useAuth();
   const [username, setUsername] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [localError, setLocalError] = useState<string>("");
   const [showPassword, setShowPassword] = useState<boolean>(false);
+
+  const handleLogin = async (username, password) => {
+    // Giả lập API call
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        if (username === 'admin' && password === '123456') {
+          resolve({ token: 'abc123' });
+        } else {
+          reject(new Error('Invalid username or password.'));
+        }
+      }, 1000);
+    });
+  };
 
   useEffect(() => {
     if (error) {
