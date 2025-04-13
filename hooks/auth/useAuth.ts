@@ -2,6 +2,7 @@ import { useState, useContext } from "react";
 import * as SecureStore from "expo-secure-store";
 import { AuthContext } from "@/context/AuthContext";
 import { LoginResponse } from "@/types/type";
+import { loginUser, registerUser } from "@/services/authServices";
 
 const useAuth = () => {
   const authContext = useContext(AuthContext);
@@ -33,13 +34,12 @@ const useAuth = () => {
       return null;
     }
   };
-
-  const handleLogin = async (username: string, password: string): Promise<LoginResponse | void> => {
+  const handleLogin = async (email: string, password: string): Promise<LoginResponse | void> => {
     setLoading(true);
     setError(null);
 
     try {
-      const response = await login(username, password);
+      const response = await loginUser(email, password);
       if (!response?.token) throw new Error("Invalid response");
       return response;
     } catch (err) {
@@ -60,7 +60,7 @@ const useAuth = () => {
     setError(null);
 
     try {
-      const response = await register(username, password, email);
+      const response = await registerUser(username, password, email);
       return response;
     } catch (err) {
       console.error("Registration error:", err);

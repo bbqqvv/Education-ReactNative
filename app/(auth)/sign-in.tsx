@@ -7,6 +7,7 @@ import {
   View,
   ActivityIndicator,
   SafeAreaView,
+  StyleSheet,
 } from "react-native";
 import useAuth from "@/hooks/auth/useAuth";
 import { Link, router } from "expo-router";
@@ -44,14 +45,12 @@ export default function LoginPage() {
       return;
     }
 
-    setLocalError(""); // Reset local error message
+    setLocalError("");
 
     try {
       const response = await handleLogin(username, password);
       if (response?.token) {
         router.replace("/(tabs)/home");
-      } else {
-        setLocalError("Invalid username or password.");
       }
     } catch (err) {
       console.error("Login failed", err);
@@ -64,23 +63,20 @@ export default function LoginPage() {
   }, []);
 
   return (
-    <SafeAreaView className="flex-1 justify-center items-center bg-white">
-      <View className="w-11/12 max-w-md p-5 bg-white rounded-lg">
-        <Text className="text-2xl font-bold text-cyan-500 mb-5 text-center">
-          Chào mừng
-        </Text>
-        <Text className="text-xl font-bold text-black mb-1 m-1">
-          Đăng nhập 
-        </Text>
-        <Text className="text-sm text-gray-600 mb-10">
-          Chào mừng bạn đến với lớp học của Văn Quốc Bùi, vui lòng nhập thông tin để đăng nhập bên dưới
+    <SafeAreaView style={styles.container}>
+      <View style={styles.card}>
+        <Text style={styles.welcomeText}>Chào mừng</Text>
+        <Text style={styles.loginTitle}>Đăng nhập</Text>
+        <Text style={styles.subtitle}>
+          Chào mừng bạn đến với lớp học của Văn Quốc Bùi, vui lòng nhập thông
+          tin để đăng nhập bên dưới
         </Text>
 
         {/* Username Input */}
-        <View className="mb-4">
-          <Text className="text-sm text-gray-600 mb-1">Email</Text>
+        <View style={styles.inputContainer}>
+          <Text style={styles.inputLabel}>Email</Text>
           <TextInput
-            className="bg-gray-100 border p-3 border-gray-300 rounded-xl p-2 text-base text-gray-800"
+            style={styles.input}
             placeholder="Nhập email"
             value={username}
             onChangeText={setUsername}
@@ -89,18 +85,18 @@ export default function LoginPage() {
         </View>
 
         {/* Password Input */}
-        <View className="mb-4">
-          <Text className="text-sm text-gray-600 mb-1">Mật khẩu</Text>
-          <View className="flex-row items-center">
+        <View style={styles.inputContainer}>
+          <Text style={styles.inputLabel}>Mật khẩu</Text>
+          <View style={styles.passwordContainer}>
             <TextInput
-              className="flex-1 p-3 bg-gray-100 border border-gray-300 rounded-xl p-2 text-base text-gray-800"
+              style={styles.passwordInput}
               placeholder="Nhập mật khẩu của bạn"
               value={password}
               onChangeText={setPassword}
               secureTextEntry={!showPassword}
             />
             <TouchableOpacity
-              className="absolute right-2"
+              style={styles.eyeIcon}
               onPress={handleTogglePasswordVisibility}
             >
               <Ionicons
@@ -110,36 +106,35 @@ export default function LoginPage() {
               />
             </TouchableOpacity>
           </View>
-          <TouchableOpacity onPress={() => router.push("/forgot-password")}>
-            <Text className="text-sm text-black mt-2 text-right">Quên mật khẩu</Text>
+          <TouchableOpacity
+            onPress={() => router.push("/ForgotPasswordScreen")}
+          >
+            <Text style={styles.forgotPassword}>Quên mật khẩu</Text>
           </TouchableOpacity>
         </View>
 
         {/* Submit Button */}
         <TouchableOpacity
-          className={`bg-cyan-500 py-3 rounded-xl justify-center items-center mt-5 ${loading ? "bg-gray-400" : ""
-            }`}
+          style={[styles.loginButton, loading && styles.disabledButton]}
           onPress={handleSubmit}
           disabled={loading}
         >
           {loading ? (
             <ActivityIndicator size="small" color="#fff" />
           ) : (
-            <Text className="text-white text-base font-semibold">Đăng nhập</Text>
+            <Text style={styles.buttonText}>Đăng nhập</Text>
           )}
         </TouchableOpacity>
 
         {/* Error Messages */}
         {(localError || error) && (
-          <Text className="text-red-500 text-sm mt-2 text-center">
-            {localError || error}
-          </Text>
+          <Text style={styles.errorText}>{localError || error}</Text>
         )}
 
         {/* Footer Link */}
-        <Text className="text-sm text-gray-600 mt-5 text-center">
+        <Text style={styles.footerText}>
           Chưa có tài khoản?{" "}
-          <Link href="/(auth)/sign-up" className="text-cyan-500 font-semibold">
+          <Link href="/(auth)/sign-up" style={styles.signupLink}>
             Đăng ký
           </Link>
         </Text>
@@ -147,3 +142,111 @@ export default function LoginPage() {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#fff",
+  },
+  card: {
+    width: "90%",
+    maxWidth: 400,
+    padding: 20,
+    backgroundColor: "#fff",
+    borderRadius: 12,
+  },
+  welcomeText: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#06b6d4",
+    marginBottom: 20,
+    textAlign: "center",
+  },
+  loginTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#000",
+    marginBottom: 4,
+    marginLeft: 4,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: "#4b5563",
+    marginBottom: 40,
+  },
+  inputContainer: {
+    marginBottom: 16,
+  },
+  inputLabel: {
+    fontSize: 14,
+    color: "#4b5563",
+    marginBottom: 8,
+  },
+  input: {
+    backgroundColor: "#f3f4f6",
+    borderWidth: 1,
+    borderColor: "#d1d5db",
+    borderRadius: 12,
+    padding: 12,
+    fontSize: 16,
+    color: "#1f2937",
+  },
+  passwordContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  passwordInput: {
+    flex: 1,
+    backgroundColor: "#f3f4f6",
+    borderWidth: 1,
+    borderColor: "#d1d5db",
+    borderRadius: 12,
+    padding: 12,
+    fontSize: 16,
+    color: "#1f2937",
+  },
+  eyeIcon: {
+    position: "absolute",
+    right: 12,
+  },
+  forgotPassword: {
+    fontSize: 14,
+    color: "#000",
+    marginTop: 8,
+    textAlign: "right",
+  },
+  loginButton: {
+    backgroundColor: "#06b6d4",
+    paddingVertical: 12,
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 20,
+  },
+  disabledButton: {
+    backgroundColor: "#9ca3af",
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  errorText: {
+    color: "#ef4444",
+    fontSize: 14,
+    marginTop: 8,
+    textAlign: "center",
+  },
+  footerText: {
+    fontSize: 14,
+    color: "#4b5563",
+    marginTop: 20,
+    textAlign: "center",
+  },
+  signupLink: {
+    color: "#06b6d4",
+    fontWeight: "600",
+  },
+});

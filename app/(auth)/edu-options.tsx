@@ -1,55 +1,123 @@
 import React from "react";
-import { SafeAreaView, Text, TouchableOpacity, View } from "react-native";
+import {
+  SafeAreaView,
+  Text,
+  TouchableOpacity,
+  View,
+  StyleSheet,
+} from "react-native";
 import { useRouter } from "expo-router";
 
 const EduOption = () => {
   const router = useRouter();
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
-      {/* Phần Tiêu đề */}
-      <View className="flex-1 justify-center items-center px-6">
-        <Text className="text-4xl font-bold text-[#63BAD5] mb-4">
-          Chào mừng!
-        </Text>
-        <Text className="text-lg text-gray-600 text-center mb-8 px-4">
+    <SafeAreaView style={styles.container}>
+      {/* Header Section */}
+      <View style={styles.contentContainer}>
+        <Text style={styles.title}>Chào mừng!</Text>
+        <Text style={styles.subtitle}>
           Bạn là học sinh hay giáo viên? Hãy chọn vai trò của bạn để bắt đầu!
         </Text>
 
-        {/* Phần Lựa chọn */}
-        <View className="w-full">
-          {/* Nút Học sinh */}
+        {/* Options Section */}
+        <View style={styles.optionsContainer}>
+          {/* Student Button */}
           <TouchableOpacity
-            className="bg-[#63BAD5] py-4 rounded-full shadow-sm mb-6 items-center flex-row justify-center space-x-3"
+            style={[styles.button, styles.studentButton]}
             onPress={() => router.push("/(auth)/sign-in")}
             activeOpacity={0.7}
           >
-            <Text className="text-white text-lg font-semibold tracking-wide">
-              Tôi là Học sinh
-            </Text>
+            <Text style={styles.buttonText}>Tôi là Học sinh</Text>
           </TouchableOpacity>
 
-          {/* Nút Giáo viên */}
+          {/* Teacher Button */}
           <TouchableOpacity
-            className="bg-[#D5BA63] py-4 rounded-full shadow-sm items-center flex-row justify-center space-x-3"
+            style={[styles.button, styles.teacherButton]}
             onPress={() => router.push("/(auth)/sign-in")}
             activeOpacity={0.7}
           >
-            <Text className="text-white text-lg font-semibold tracking-wide">
-              Tôi là Giáo viên
-            </Text>
+            <Text style={styles.buttonText}>Tôi là Giáo viên</Text>
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* Phần Footer */}
-      <View className="py-6 border-t border-gray-200 items-center bg-white">
-        <Text className="text-sm text-gray-500">
+      {/* Footer Section */}
+      <View style={styles.footer}>
+        <Text style={styles.footerText}>
           Đừng lo, bạn có thể thay đổi vai trò sau!
         </Text>
       </View>
     </SafeAreaView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#ffffff",
+  },
+  contentContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 24,
+  },
+  title: {
+    fontSize: 36,
+    fontWeight: "bold",
+    color: "#63BAD5",
+    marginBottom: 16,
+  },
+  subtitle: {
+    fontSize: 18,
+    color: "#6b7280",
+    textAlign: "center",
+    marginBottom: 32,
+    paddingHorizontal: 16,
+  },
+  optionsContainer: {
+    width: "100%",
+  },
+  button: {
+    paddingVertical: 16,
+    borderRadius: 999,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 1,
+    elevation: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
+  },
+  studentButton: {
+    backgroundColor: "#63BAD5",
+    marginBottom: 24,
+  },
+  teacherButton: {
+    backgroundColor: "#D5BA63",
+  },
+  buttonText: {
+    color: "#ffffff",
+    fontSize: 18,
+    fontWeight: "600",
+    letterSpacing: 0.5,
+  },
+  footer: {
+    paddingVertical: 24,
+    borderTopWidth: 1,
+    borderTopColor: "#e5e7eb",
+    alignItems: "center",
+    backgroundColor: "#ffffff",
+  },
+  footerText: {
+    fontSize: 14,
+    color: "#6b7280",
+  },
+});
 
 export default EduOption;

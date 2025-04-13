@@ -4,7 +4,7 @@
     "slug": "edu",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/check.png",
+    "icon": "./assets/images/logo-app.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -25,6 +25,7 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
+      
       "expo-router",
       [
         "expo-splash-screen",

@@ -52,7 +52,24 @@ export default function Layout() {
         }}
       />
 
-      
+      <Tabs.Screen
+        name="mission"
+        options={{
+          title: 'Nhiệm vụ',
+          tabBarIcon: ({ focused, color }) => (
+            <Animated.View style={{ transform: [{ scale: focused ? scaleValue : 1 }] }}>
+              <Ionicons
+                name={focused ? 'rocket' : 'rocket-outline'}
+                size={24}
+                color={color}
+              />
+            </Animated.View>
+          ),
+        }}
+        listeners={{
+          tabPress: animateTabPress,
+        }}
+      />
 
       <Tabs.Screen
         name="message"

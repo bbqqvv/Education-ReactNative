@@ -11,7 +11,7 @@ const api = axios.create({
 
 const sendRequest = async (
   endpoint: string,
-  data: { username: string; password: string; email?: string }
+  data: { email: string; password: string; username?: string }
 ): Promise<LoginResponse> => {
   try {
     const response: AxiosResponse<LoginResponse> = await api.post(endpoint, data);
@@ -26,12 +26,12 @@ const sendRequest = async (
   }
 };
 
-// Hàm đăng nhập
-export const loginUser = (username: string, password: string): Promise<LoginResponse> => {
-  return sendRequest("/login", { username, password });
+// Hàm đăng nhập bằng email
+export const loginUser = (email: string, password: string): Promise<LoginResponse> => {
+  return sendRequest("/login", { email, password });
 };
 
-// Hàm đăng ký
+// Hàm đăng ký 
 export const registerUser = (
   username: string,
   password: string,

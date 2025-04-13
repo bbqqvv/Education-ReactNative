@@ -2,7 +2,7 @@ import React from "react";
 import { View, TouchableOpacity, Image, Text, StyleSheet } from "react-native";
 
 interface FeatureItemProps {
-  icon: any; // hoặc sử dụng ImageSourcePropType từ react-native
+  icon: any; // Hoặc sử dụng `ImageSourcePropType` từ react-native
   label: string;
   onPress: (label: string) => void;
 }
@@ -31,13 +31,13 @@ const FeatureItem: React.FC<FeatureItemProps> = ({ icon, label, onPress }) => {
 
 const styles = StyleSheet.create({
   touchable: {
-    margin: 8, // Thêm margin để các item không dính sát nhau
-    width: '22%', // Đảm bảo hiển thị đúng 4 cột
+    margin: 8,
+    width: '22%', // Hiển thị đúng 4 cột
     alignItems: 'center',
   },
   container: {
     alignItems: "center",
-    width: '100%', // Chiếm toàn bộ width của touchable
+    width: '100%',
   },
   borderFeatures: {
     borderWidth: 1,
@@ -48,8 +48,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "white",
-    elevation: 2, // Thêm shadow cho Android
-    shadowColor: '#000', // Thêm shadow cho iOS
+    elevation: 2, // Shadow cho Android
+    shadowColor: '#000', // Shadow cho iOS
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -57,14 +57,14 @@ const styles = StyleSheet.create({
   icon: {
     width: 45,
     height: 45,
-    tintColor: '#59CBE8', // Thêm màu nếu cần
+    tintColor: '#59CBE8', // Màu icon
   },
   label: {
     textAlign: "center",
     fontSize: 14,
-    marginTop: 8, // Tăng khoảng cách với icon
+    marginTop: 8,
     fontWeight: "600",
-    color: '#333', // Màu chữ rõ ràng hơn
+    color: '#333',
   },
 });
 
