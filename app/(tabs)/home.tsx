@@ -9,74 +9,198 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from "react-native";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/context/AuthContext"; // Assuming you have the AuthContext set up
 import SearchField from "@/components/SearchField";
 import Quote from "@/components/Quote";
 import NotificationButton from "@/components/NotificationButton";
 import HomeProfile from "@/components/HomeProfile";
 import { quotes } from "@/constants";
 import { features } from "@/constants";
+
 import FeatureItem from "@/components/FeatureItem";
 import NewsItem from "@/components/NewsItem";
-import FooterHome from "@/components/FooterHome"; // Sửa chính tả
-import { useRouter } from "expo-router";
+import FooterHome from "@/components/FooterHome";
 
 export default function Home() {
-  const router = useRouter();
-  const { user, loading } = useAuth();
+  const { user, loading } = useAuth(); // Assuming you have this hook set up
   const [currentQuoteIndex, setCurrentQuoteIndex] = useState(0);
 
-  const handleFeaturePress = (label: string) => {
-    switch(label) {
-      case 'Lớp học':
-        router.push('/stack/class');
-        break;
-      case 'Lịch thi':
-        router.push('/stack/examSchedule');
-        break;
-      case 'Xin nghỉ':
-        router.push('/stack/leaveofabsence');
-        break;
-      case 'Vi phạm':
-        router.push('/stack/violate');
-        break;
-      case 'TKB':
-        router.push('/stack/timetable');
-        break;
-      case 'Tất cả':
-        router.push('/stack/allFeatures');
-        break;
-      default:
-        console.log('Feature clicked:', label);
-    }
+  const newsData = [
+    {
+      title: "Tin hot mới nhất trên thế giới",
+      date: "16th May",
+      time: "09:32 pm",
+      image: require("@/assets/images/avatar.png"),
+    },
+    {
+      title: "Tin hot 2",
+      date: "17th May",
+      time: "10:15 am",
+      image: require("@/assets/images/avatar.png"),
+    },
+    {
+      title: "Tin hot 3",
+      date: "18th May",
+      time: "03:00 pm",
+      image: require("@/assets/images/avatar.png"),
+    },
+    {
+      title: "Tin hot 4",
+      date: "19th May",
+      time: "08:20 am",
+      image: require("@/assets/images/avatar.png"),
+    },
+  ];
+
+  const handleReloadQuote = async () => {
+    const nextIndex = (currentQuoteIndex + 1) % quotes.length;
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        setCurrentQuoteIndex(nextIndex);
+        resolve();
+      }, 1000); // Simulate a network delay
+    });
   };
 
-  // ... (phần còn lại giữ nguyên)
-  
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#0000ff" />
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView>
-        {/* ... (phần header giữ nguyên) */}
+        {/* Header */}
+        <View style={styles.headerContainer}>
+          <View style={styles.headerRow}>
+            <HomeProfile />
+            <View style={styles.headerActions}>
+              <SearchField onSearch={(query) => console.log("Search:", query)} />
+              <NotificationButton />
+            </View>
+          </View>
+        </View>
 
         {/* Feature List */}
         <FlatList
           data={features}
           keyExtractor={(item, index) => `feature-${index}`}
-          renderItem={({ item }) => (
-            <FeatureItem 
-              icon={item.icon} 
-              label={item.label}
-              onPress={() => handleFeaturePress(item.label)}
-            />
-          )}
+          renderItem={({ item }) => <FeatureItem icon={item.icon} label={item.label} />}
           numColumns={4}
           contentContainerStyle={styles.featureList}
+          showsVerticalScrollIndicator={false}
         />
 
-        {/* ... (phần còn lại giữ nguyên) */}
+        {/* Single Quote Section */}
+        <View style={styles.quoteContainer}>
+          <Quote
+            quote={quotes[currentQuoteIndex].quote}
+            author={quotes[currentQuoteIndex].author}
+            onReload={handleReloadQuote}
+          />
+        </View>
+
+        {/* News Section */}
+        <View style={styles.newsContainer}>
+          <View style={styles.newsHeader}>
+            <Text style={styles.newsTitle}>Tin Tức Mới</Text>
+            <TouchableOpacity>
+              <Text style={styles.newsViewAll}>tất cả</Text>
+            </TouchableOpacity>
+          </View>
+          <FlatList
+            data={newsData}
+            renderItem={({ item }) => (
+              <NewsItem
+                title={item.title}
+                date={item.date}
+                time={item.time}
+                image={item.image}
+              />
+            )}
+            keyExtractor={(item, index) => index.toString()}
+            contentContainerStyle={styles.newsList}
+            showsVerticalScrollIndicator={true}
+            scrollEnabled={newsData.length > 3}
+            style={styles.newsListStyle}
+          />
+        </View>
+        <View style={styles.footer}>
+          <FooterHome />
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-// ... (styles giữ nguyên)
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#f5f5f5",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#ffffff",
+  },
+  headerContainer: {
+    padding: 16,
+    backgroundColor: "#ffffff",
+  },
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  featureList: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 10,
+  },
+  quoteContainer: {
+    padding: 10,
+  },
+  newsContainer: {
+    flex: 1,
+    padding: 10,
+    marginLeft: 10,
+    width: "95%",
+    backgroundColor: "#ffffff",
+    borderRadius: 20,
+    paddingTop: 16,
+  },
+  newsHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingBottom: 16,
+  },
+  newsTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#333333",
+  },
+  newsViewAll: {
+    fontSize: 14,
+    color: "#1E90FF",
+    fontWeight: "500",
+  },
+  newsList: {
+    paddingBottom: 16,
+  },
+  newsListStyle: {
+    maxHeight: 300,
+  },
+  footer: {
+    marginBottom: 100,
+  }
+});
