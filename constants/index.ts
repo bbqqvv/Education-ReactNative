@@ -53,14 +53,18 @@ export const onboarding = [
     },
 ];
 
+
 export const features = [
     { icon: icons.Student, label: "Lớp học" },
+    // { icon: icons.newsLetter, label: "Bản tin" },
     { icon: icons.timeTable, label: "TKB" },
-    { icon: icons.examTime, label: "Lịch thi" }, // Sử dụng examTime thay vì examSubmit cho "Lịch thi"
+    { icon: icons.examSubmit, label: "Bài nộp" },
+    { icon: icons.examTime, label: "Lịch thi" },
+    { icon: icons.notePad, label: "Điểm danh" },
     { icon: icons.Violate, label: "Vi phạm" },
     { icon: icons.Note, label: "Xin nghỉ" },
     { icon: icons.allFeatures, label: "Tất cả" },
-];
+]
 
 export const quotes = [
     { quote: "Mục đích của giáo dục không phải là dạy cách kiếm sống, mà là dạy cách sống.", author: "Aristotle" },
@@ -84,7 +88,6 @@ export const quotes = [
     { quote: "Hãy sống đơn giản, ước mơ lớn, và biết ơn những điều nhỏ bé.", author: "Khuyết danh" },
     { quote: "Thời gian là thứ quý giá nhất mà bạn có. Đừng lãng phí nó.", author: "Khuyết danh" },
 ];
-
 export const profiles = [
     {
         name: "Thi Liễu",
@@ -102,7 +105,6 @@ export const profiles = [
         image: require("@/assets/images/avatar.png"),
     },
 ];
-
 export const data = {
     onboarding, icons, quotes, profiles, features
 };
