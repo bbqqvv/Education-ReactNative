@@ -57,7 +57,6 @@ const styles = StyleSheet.create({
   icon: {
     width: 45,
     height: 45,
-    tintColor: '#59CBE8', // Màu icon
   },
   label: {
     textAlign: "center",
