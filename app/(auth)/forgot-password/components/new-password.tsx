@@ -100,7 +100,7 @@ export default function NewPassword() {
 
         {/* Update button */}
         <TouchableOpacity
-          onPress={() => router.push("/(auth)/forgot-password/components/ResultForgot")}
+          onPress={() => router.push("/(auth)/forgot-password/components/result-forgot")}
           disabled={isSubmitDisabled}
           style={[
             styles.submitButton,

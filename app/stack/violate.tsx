@@ -34,7 +34,7 @@ const ViolationDetail = () => {
 
   const router = useRouter();
   const handleFeaturePress = () => {
-    router.push('/(tabs)/Home'); // Navigate back to the home screen
+    router.push('/(tabs)/home'); // Navigate back to the home screen
   }
 
   return (

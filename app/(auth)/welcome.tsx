@@ -16,7 +16,7 @@ const Welcome = () => {
     <SafeAreaView style={styles.container}>
       {/* Skip Button */}
       <TouchableOpacity
-        onPress={() => router.replace("/(auth)/EduOptions")}
+        onPress={() => router.replace("/(auth)/edu-option")}
         style={styles.skipButton}
       >
         <Text style={styles.skipText}>Bỏ qua</Text>
@@ -55,7 +55,7 @@ const Welcome = () => {
           title={isLastSlide ? "Bắt đầu" : "Tiếp theo"}
           onPress={() =>
             isLastSlide
-              ? router.replace("/(auth)/EduOptions")
+              ? router.replace("/(auth)/edu-option")
               : swiperRef.current?.scrollBy(1)
           }
           buttonStyle={[

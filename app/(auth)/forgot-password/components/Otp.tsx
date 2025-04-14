@@ -40,7 +40,7 @@ export default function OTPVerification() {
 
   const handleSubmit = () => {
     if (otp.every((num) => num !== "")) {
-      router.push("/ResetPassword");
+      router.push("/(auth)/forgot-password/components/reset-password");
     }
   };
 

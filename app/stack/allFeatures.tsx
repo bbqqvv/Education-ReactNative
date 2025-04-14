@@ -23,7 +23,7 @@ const AllItemsScreen = () => {
   const filterOptions = ['Tất cả', 'Môn học', 'Bài tập', 'Kiểm tra', 'Sự kiện'];
 
   const handleBack = () => {
-    router.push('/(tabs)/Home'); // Navigate back to the home screen
+    router.push('/(tabs)/home'); // Navigate back to the home screen
   };
 
   const filteredItems = activeFilter === 'Tất cả' 

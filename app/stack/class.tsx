@@ -23,7 +23,7 @@ const Class = () => {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('student');
   const handleFeaturePress = () => {
-    router.push('/(tabs)/Home'); // Navigate back to the home screen
+    router.push('/(tabs)/home'); // Navigate back to the home screen
   };
 
 

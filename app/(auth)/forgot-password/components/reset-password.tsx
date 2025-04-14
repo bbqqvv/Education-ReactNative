@@ -22,7 +22,7 @@ export default function ResetPassword() {
 
         {/* Confirm button */}
         <TouchableOpacity
-          onPress={() => router.push("/(auth)/forgot-password/components/NewPassword")}
+          onPress={() => router.push("/(auth)/forgot-password/components/new-password")}
           style={styles.confirmButton}
         >
           <Text style={styles.confirmButtonText}>Xác nhận</Text>
