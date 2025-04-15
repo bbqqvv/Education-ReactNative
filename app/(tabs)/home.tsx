@@ -1,64 +1,74 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import {
   View,
   Text,
   ActivityIndicator,
   ScrollView,
   SafeAreaView,
-  FlatList,
   TouchableOpacity,
   StyleSheet,
-} from "react-native";
-import { useAuth } from "@/context/AuthContext"; // Assuming you have the AuthContext set up
-import SearchField from "@/components/SearchField";
-import Quote from "@/components/Quote";
-import NotificationButton from "@/components/NotificationButton";
-import HomeProfile from "@/components/HomeProfile";
-import { quotes } from "@/constants";
-import { features } from "@/constants";
-
-import FeatureItem from "@/components/FeatureItem";
-import NewsItem from "@/components/NewsItem";
-import FooterHome from "@/components/FooterHome";
+} from 'react-native';
+import { useAuth } from '@/context/AuthContext';
+import SearchField from '@/components/SearchField';
+import Quote from '@/components/Quote';
+import NotificationButton from '@/components/NotificationButton';
+import HomeProfile from '@/components/HomeProfile';
+import { quotes, features } from '@/constants';
+import FeatureItem from '@/components/FeatureItem';
+import NewsItem from '@/components/NewsItem';
+import FooterHome from '@/components/FooterHome';
+import { useRouter } from 'expo-router';
 
 export default function Home() {
-  const { user, loading } = useAuth(); // Assuming you have this hook set up
+  const router = useRouter();
+  const { user, loading } = useAuth();
   const [currentQuoteIndex, setCurrentQuoteIndex] = useState(0);
+  const [isQuoteLoading, setIsQuoteLoading] = useState(false);
+
+  const handleFeaturePress = (label: string) => {
+    console.log('Navigating to:', label);
+    switch (label) {
+      case 'Lớp học':
+        router.push('/stack/class');
+        break;
+      case 'Lịch thi':
+        router.push('/stack/examSchedule');
+        break;
+      case 'Xin nghỉ':
+        router.push('/stack/leaveofabsence');
+        break;
+      case 'Vi phạm':
+        router.push('/stack/violate');
+        break;
+      case 'TKB':
+        router.push('/stack/timetable');
+        break;
+      case 'Tất cả':
+        router.push('/stack/allFeatures');
+        break;
+      default:
+        console.log('Unknown feature:', label);
+    }
+  };
 
   const newsData = [
     {
-      title: "Tin hot mới nhất trên thế giới",
-      date: "16th May",
-      time: "09:32 pm",
-      image: require("@/assets/images/avatar.png"),
-    },
-    {
-      title: "Tin hot 2",
-      date: "17th May",
-      time: "10:15 am",
-      image: require("@/assets/images/avatar.png"),
-    },
-    {
-      title: "Tin hot 3",
-      date: "18th May",
-      time: "03:00 pm",
-      image: require("@/assets/images/avatar.png"),
-    },
-    {
-      title: "Tin hot 4",
-      date: "19th May",
-      time: "08:20 am",
-      image: require("@/assets/images/avatar.png"),
+      title: 'Tin hot mới nhất trên thế giới',
+      date: '16th May',
+      time: '09:32 pm',
+      image: require('@/assets/images/avatar.png') || null,
     },
   ];
 
   const handleReloadQuote = async () => {
+    setIsQuoteLoading(true);
     const nextIndex = (currentQuoteIndex + 1) % quotes.length;
     return new Promise((resolve) => {
       setTimeout(() => {
         setCurrentQuoteIndex(nextIndex);
+        setIsQuoteLoading(false);
         resolve();
-      }, 1000); // Simulate a network delay
+      }, 1000);
     });
   };
 
@@ -72,34 +82,67 @@ export default function Home() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView>
+      <ScrollView
+        contentContainerStyle={styles.scrollContainer}
+        showsVerticalScrollIndicator={false}
+        style={{ backgroundColor: '#ffffff' }}
+      >
         {/* Header */}
         <View style={styles.headerContainer}>
           <View style={styles.headerRow}>
             <HomeProfile />
             <View style={styles.headerActions}>
-              <SearchField onSearch={(query) => console.log("Search:", query)} />
+              <SearchField onSearch={(query) => console.log('Search:', query)} />
               <NotificationButton />
             </View>
           </View>
         </View>
 
         {/* Feature List */}
-        <FlatList
-          data={features}
-          keyExtractor={(item, index) => `feature-${index}`}
-          renderItem={({ item }) => <FeatureItem icon={item.icon} label={item.label} />}
-          numColumns={4}
-          contentContainerStyle={styles.featureList}
-          showsVerticalScrollIndicator={false}
-        />
+        <View style={styles.featureContainer}>
+          {/* Row 1 */}
+          <View style={styles.featureRow}>
+            {features.slice(0, 4).map((feature, index) => (
+              <FeatureItem
+                key={`feature-${index}`}
+                icon={feature.icon}
+                label={feature.label}
+                onPress={() => handleFeaturePress(feature.label)}
 
-        {/* Single Quote Section */}
+              />
+            ))}
+            {features.slice(0, 4).length < 4 &&
+              Array.from({ length: 4 - features.slice(0, 4).length }).map((_, i) => (
+                <View key={`empty-first-${i}`} style={styles.emptyFeature} />
+              ))}
+          </View>
+
+          {/* Row 2 */}
+          {features.length > 4 && (
+            <View style={styles.featureRow}>
+              {features.slice(4).map((feature, index) => (
+                <FeatureItem
+                  key={`feature-${index + 4}`}
+                  icon={feature.icon}
+                  label={feature.label}
+                  onPress={() => handleFeaturePress(feature.label)}
+                />
+              ))}
+              {features.slice(4).length < 4 &&
+                Array.from({ length: 4 - features.slice(4).length }).map((_, i) => (
+                  <View key={`empty-second-${i}`} style={styles.emptyFeature} />
+                ))}
+            </View>
+          )}
+        </View>
+
+        {/* Quote Section */}
         <View style={styles.quoteContainer}>
           <Quote
             quote={quotes[currentQuoteIndex].quote}
             author={quotes[currentQuoteIndex].author}
             onReload={handleReloadQuote}
+            isLoading={isQuoteLoading}
           />
         </View>
 
@@ -111,26 +154,22 @@ export default function Home() {
               <Text style={styles.newsViewAll}>tất cả</Text>
             </TouchableOpacity>
           </View>
-          <FlatList
-            data={newsData}
-            renderItem={({ item }) => (
+          {newsData.length > 0 ? (
+            newsData.map((news, index) => (
               <NewsItem
-                title={item.title}
-                date={item.date}
-                time={item.time}
-                image={item.image}
+                key={`news-${index}`}
+                title={news.title}
+                date={news.date}
+                time={news.time}
+                image={news.image}
               />
-            )}
-            keyExtractor={(item, index) => index.toString()}
-            contentContainerStyle={styles.newsList}
-            showsVerticalScrollIndicator={true}
-            scrollEnabled={newsData.length > 3}
-            style={styles.newsListStyle}
-          />
+            ))
+          ) : (
+            <Text style={styles.noNewsText}>Không có tin tức mới</Text>
+          )}
         </View>
-        <View style={styles.footer}>
-          <FooterHome />
-        </View>
+
+        <FooterHome />
       </ScrollView>
     </SafeAreaView>
   );
@@ -139,68 +178,81 @@ export default function Home() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: '#ffffff',
+  },
+  scrollContainer: {
+    paddingBottom: 20,
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#ffffff",
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
   },
   headerContainer: {
     padding: 16,
-    backgroundColor: "#ffffff",
+    backgroundColor: '#ffffff',
+    marginBottom: 10,
   },
   headerRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   headerActions: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 12,
   },
-  featureList: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 10,
+  featureContainer: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    marginHorizontal: 16,
+    marginBottom: 16,
+    paddingVertical: 16,
+  },
+  featureRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 16,
+  },
+  emptyFeature: {
+    width: 72,
   },
   quoteContainer: {
-    padding: 10,
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    marginHorizontal: 16,
+    padding: 16,
+    marginBottom: 16,
   },
   newsContainer: {
-    flex: 1,
-    padding: 10,
-    marginLeft: 10,
-    width: "95%",
-    backgroundColor: "#ffffff",
-    borderRadius: 20,
-    paddingTop: 16,
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    marginHorizontal: 16,
+    padding: 16,
+    marginBottom: 16,
   },
   newsHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingBottom: 16,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
   },
   newsTitle: {
     fontSize: 18,
-    fontWeight: "bold",
-    color: "#333333",
+    fontWeight: 'bold',
+    color: '#333333',
   },
   newsViewAll: {
     fontSize: 14,
-    color: "#1E90FF",
-    fontWeight: "500",
+    color: '#1E90FF',
+    fontWeight: '500',
   },
-  newsList: {
-    paddingBottom: 16,
+  noNewsText: {
+    fontSize: 16,
+    color: '#666666',
+    textAlign: 'center',
+    padding: 16,
   },
-  newsListStyle: {
-    maxHeight: 300,
-  },
-  footer: {
-    marginBottom: 100,
-  }
 });

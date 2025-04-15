@@ -27,7 +27,7 @@ export default function Layout() {
         headerShown: false,
         tabBarStyle: styles.tabBar,
         tabBarLabelStyle: styles.tabBarLabel,
-        tabBarActiveTintColor: '#63BAD5', // Màu chủ đạo cho tab active
+        tabBarActiveTintColor: '#63BAD5', 
         tabBarInactiveTintColor: '#AAAAAA',
         tabBarIconStyle: styles.tabBarIcon,
         tabBarItemStyle: styles.tabBarItem,
@@ -51,15 +51,14 @@ export default function Layout() {
           tabPress: animateTabPress,
         }}
       />
-
       <Tabs.Screen
-        name="mission"
+        name="chat-ai"
         options={{
-          title: 'Nhiệm vụ',
+          title: 'Chat Ai',
           tabBarIcon: ({ focused, color }) => (
             <Animated.View style={{ transform: [{ scale: focused ? scaleValue : 1 }] }}>
               <Ionicons
-                name={focused ? 'rocket' : 'rocket-outline'}
+                name={focused ? 'home' : 'home-outline'}
                 size={24}
                 color={color}
               />
