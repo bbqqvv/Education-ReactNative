@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import { useRouter } from 'expo-router';
 
 const LeaveList = () => {
   const router = useRouter();
+  const [activeStatus, setActiveStatus] = useState<'all' | 'approved' | 'pending' | 'rejected'>('all');
   
   const handleBack = () => {
     router.back();
@@ -31,12 +32,59 @@ const LeaveList = () => {
     },
     {
       id: 2,
+      status: 'approved',
+      applicant: 'Nguyễn Văn A',
+      reason: 'Khám bệnh',
+      date: '05/05/2022 - 06/05/2022'
+    },
+    {
+      id: 3,
+      status: 'rejected',
+      applicant: 'Trần Thị B',
+      reason: 'Việc cá nhân',
+      date: '10/05/2022 - 11/05/2022'
+    },
+    {
+      id: 4,
       status: 'pending',
-      applicant: 'Bùi Quốc Văn',
-      reason: 'Việc gia đình',
-      date: '03/05/2022 - 03/05/2022'
+      applicant: 'Lê Văn C',
+      reason: 'Đám cưới',
+      date: '15/05/2022 - 16/05/2022'
     }
   ];
+
+  // Lọc đơn theo trạng thái
+  const filteredApplications = leaveApplications.filter(app => {
+    if (activeStatus === 'all') return true;
+    return app.status === activeStatus;
+  });
+
+  // Đếm số lượng từng trạng thái
+  const statusCounts = {
+    approved: leaveApplications.filter(app => app.status === 'approved').length,
+    pending: leaveApplications.filter(app => app.status === 'pending').length,
+    rejected: leaveApplications.filter(app => app.status === 'rejected').length,
+  };
+
+  // Chuyển đổi trạng thái sang tiếng Việt
+  const getStatusText = (status) => {
+    switch(status) {
+      case 'approved': return 'Đã duyệt';
+      case 'pending': return 'Chờ duyệt';
+      case 'rejected': return 'Từ chối';
+      default: return status;
+    }
+  };
+
+  // Màu sắc cho từng trạng thái
+  const getStatusColor = (status) => {
+    switch(status) {
+      case 'approved': return '#4CAF50'; // Xanh lá
+      case 'pending': return '#FFA000'; // Cam
+      case 'rejected': return '#F44336'; // Đỏ
+      default: return '#333';
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -49,20 +97,61 @@ const LeaveList = () => {
         <View style={{ width: 24 }} />
       </View>
 
-      {/* Status Summary */}
+      {/* Status Filter */}
       <View style={styles.statusContainer}>
-        <Text style={styles.statusText1}>Đã duyệt 1</Text>
-        <Text style={styles.statusText2}>Chờ duyệt 1</Text>
-        <Text style={styles.statusText3}>Từ chối 1</Text>
+        <TouchableOpacity 
+          style={[
+            styles.statusButton, 
+            activeStatus === 'all' && styles.activeStatusButton
+          ]}
+          onPress={() => setActiveStatus('all')}
+        >
+          <Text style={styles.statusText}>Tất cả</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={[
+            styles.statusButton, 
+            activeStatus === 'approved' && styles.activeStatusButton,
+            { borderColor: '#4CAF50' }
+          ]}
+          onPress={() => setActiveStatus('approved')}
+        >
+          <Text style={styles.statusText}>Đã duyệt ({statusCounts.approved})</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={[
+            styles.statusButton, 
+            activeStatus === 'pending' && styles.activeStatusButton,
+            { borderColor: '#FFA000' }
+          ]}
+          onPress={() => setActiveStatus('pending')}
+        >
+          <Text style={styles.statusText}>Chờ duyệt ({statusCounts.pending})</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={[
+            styles.statusButton, 
+            activeStatus === 'rejected' && styles.activeStatusButton,
+            { borderColor: '#F44336' }
+          ]}
+          onPress={() => setActiveStatus('rejected')}
+        >
+          <Text style={styles.statusText}>Từ chối ({statusCounts.rejected})</Text>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.divider} />
 
       {/* Leave Applications List */}
       <ScrollView contentContainerStyle={styles.listContainer}>
-        {leaveApplications.map((item) => (
+        {filteredApplications.map((item) => (
           <View key={item.id} style={styles.leaveCard}>
-            <Text style={styles.cardTitle}>Chờ duyệt</Text>
+            <Text style={[styles.cardTitle, { color: getStatusColor(item.status) }]}>
+              {getStatusText(item.status)}
+            </Text>
             <View style={styles.cardContent}>
               <Text style={styles.cardText}><Text style={styles.boldText}>Người làm đơn:</Text> {item.applicant}</Text>
               <Text style={styles.cardText}><Text style={styles.boldText}>Lý do:</Text> {item.reason}</Text>
@@ -105,33 +194,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     backgroundColor: '#F8F8F8',
+    flexWrap: 'wrap',
   },
-  statusText1: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-    borderColor: 'green',
-    borderWidth: 3,
+  statusButton: {
+    borderWidth: 2,
     borderRadius: 20,
     padding: 8,
+    marginVertical: 4,
+    backgroundColor: '#fff',
   },
-  statusText2: {
-    fontSize: 16,
+  activeStatusButton: {
+    backgroundColor: '#E3F2FD',
+  },
+  statusText: {
+    fontSize: 14,
     fontWeight: 'bold',
     color: '#333',
-    borderColor: 'blue',
-    borderWidth: 3,
-    borderRadius: 20,
-    padding: 8,
-  },
-  statusText3: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-    borderColor: 'red',
-    borderWidth: 3,
-    borderRadius: 20,
-    padding: 8,
   },
   divider: {
     height: 1,
@@ -152,7 +230,6 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#FFA000',
     marginBottom: 8,
   },
   cardContent: {
