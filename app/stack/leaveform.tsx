@@ -37,7 +37,12 @@ const LeaveApplication = () => {
         {/* Recipient */}
         <View style={styles.section}>
           <Text style={styles.label}>Kính gửi:</Text>
-          <Text style={styles.value}>Giáo viên chủ nhiệm</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Giáo viên chủ nhiệm"
+            value={name}
+            onChangeText={setName}
+          />
         </View>
 
         {/* Applicant */}
