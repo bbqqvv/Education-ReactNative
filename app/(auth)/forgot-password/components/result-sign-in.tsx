@@ -23,7 +23,7 @@ export default function SuccessScreen() {
         {/* Login Button */}
         <TouchableOpacity
           style={styles.button}
-          onPress={() => router.push("/(auth)/sign-in/SignIn")}
+          onPress={() => router.push("/(auth)/sign-in/sign-in")}
         >
           <Text style={styles.buttonText}>Trở về trang đăng nhập</Text>
         </TouchableOpacity>

@@ -1,3 +1,4 @@
+
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
@@ -53,6 +54,7 @@ const ViolationScreen = () => {
       default: return level;
     }
   };
+
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -259,6 +261,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: 'bold',
+
     color: '#59CBE8',
     marginBottom: 12,
   },

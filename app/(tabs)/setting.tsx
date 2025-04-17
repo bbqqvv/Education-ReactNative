@@ -1,19 +1,10 @@
 import React from "react";
 import { View, Text, Image, TouchableOpacity, Alert, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import useAuth from "@/hooks/auth/useAuth";
 
 const Setting = () => {
-  const { logout, user } = useAuth();
-
-  const handleLogout = async () => {
-    try {
-      await logout();
-      Alert.alert("Success", "You have been logged out.");
-    } catch (error) {
-      console.error("Logout failed:", error);
-      Alert.alert("Error", "Logout failed. Please try again.");
-    }
+  const handleLogout = () => {
+    Alert.alert("Thông báo", "Bạn đã nhấn Đăng Xuất.");
   };
 
   return (
@@ -21,18 +12,18 @@ const Setting = () => {
       {/* Hồ sơ người dùng */}
       <View style={styles.profileContainer}>
         <Image
-          source={user?.avatar ? { uri: user.avatar } : require("../../assets/images/avatar.png")}
+          source={require("../../assets/images/avatar.png")}
           style={styles.avatar}
         />
-        <Text style={styles.name}>{user?.username || "Seven Kay"}</Text>
+        <Text style={styles.name}>Seven Kay</Text>
         <Text style={styles.location}>Islamabad</Text>
         <Text style={styles.since}>Since 2022</Text>
       </View>
 
       {/* Menu cài đặt */}
       <View style={styles.menuContainer}>
-        <MenuItem icon="settings-outline" text="Cài Đặt Chung" onPress={undefined} bold={undefined} />
-        <MenuItem icon="information-circle-outline" text="Hướng Dẫn Sử Dụng" bold onPress={undefined} />
+        <MenuItem icon="settings-outline" text="Cài Đặt Chung" onPress={() => { }} bold={undefined} />
+        <MenuItem icon="information-circle-outline" text="Hướng Dẫn Sử Dụng" bold onPress={() => { }} />
         <MenuItem icon="log-out-outline" text="Đăng Xuất" onPress={handleLogout} bold={undefined} />
       </View>
     </View>
