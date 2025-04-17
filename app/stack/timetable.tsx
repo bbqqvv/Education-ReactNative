@@ -77,7 +77,6 @@ const Timetable = () => {
     marked: true,
     dotColor: 'white'
   };
-
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -88,7 +87,6 @@ const Timetable = () => {
         <Text style={styles.headerTitle}>Thời khóa biểu</Text>
         <View style={{ width: 24 }} />
       </View>
-
       {/* Calendar */}
       <View style={styles.calendarContainer}>
         <Calendar
@@ -159,6 +157,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#fff',
   },
+
   calendarContainer: {
     marginHorizontal: 16,
     marginTop: 8,
@@ -173,12 +172,6 @@ const styles = StyleSheet.create({
   listContainer: {
     padding: 16,
     paddingBottom: 20,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 16,
   },
   subjectCard: {
     backgroundColor: '#F8F8F8',
@@ -200,6 +193,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#555',
   },
+
   emptyText: {
     textAlign: 'center',
     color: '#888',

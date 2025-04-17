@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,6 @@ import {
   StyleSheet,
   FlatList,
 } from 'react-native';
-import { useAuth } from '@/context/AuthContext';
 import SearchField from '@/components/SearchField';
 import Quote from '@/components/Quote';
 import NotificationButton from '@/components/NotificationButton';
@@ -19,10 +18,18 @@ import FeatureItem from '@/components/FeatureItem';
 import NewsItem from '@/components/NewsItem';
 import FooterHome from '@/components/FooterHome';
 import { useRouter } from 'expo-router';
+import { useAuth } from '../hooks/useAuth';
+import { useSelector } from 'react-redux';
+import { RootState } from '../store/store';
 
 export default function Home() {
+  // Load user token from Redux
+  useAuth();
+
+  // Get user and loading status from Redux store
+  const { user, loading } = useSelector((state: RootState) => state.auth);
+
   const router = useRouter();
-  const { user, loading } = useAuth();
   const [currentQuoteIndex, setCurrentQuoteIndex] = useState(0);
   const [isQuoteLoading, setIsQuoteLoading] = useState(false);
 
@@ -144,6 +151,7 @@ export default function Home() {
     });
   };
 
+  // Display ActivityIndicator if loading
   if (loading) {
     return (
       <SafeAreaView style={styles.loadingContainer}>
@@ -162,7 +170,7 @@ export default function Home() {
         {/* Header */}
         <View style={styles.headerContainer}>
           <View style={styles.headerRow}>
-            <HomeProfile />
+            <HomeProfile user={user} />
             <View style={styles.headerActions}>
               <SearchField onSearch={(query) => console.log('Search:', query)} />
               <NotificationButton />
