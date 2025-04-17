@@ -7,6 +7,7 @@ import {
   SafeAreaView,
   TouchableOpacity,
   StyleSheet,
+  FlatList,
 } from 'react-native';
 import SearchField from '@/components/SearchField';
 import Quote from '@/components/Quote';
@@ -32,8 +33,65 @@ export default function Home() {
   const [currentQuoteIndex, setCurrentQuoteIndex] = useState(0);
   const [isQuoteLoading, setIsQuoteLoading] = useState(false);
 
+  // Dữ liệu tin tức mẫu
+  const newsData = [
+    {
+      id: '1',
+      title: 'Hội thảo giáo dục 4.0',
+      date: '16/05/2023',
+      time: '09:32',
+      image: require('@/assets/images/avatar.png'),
+      content: 'Trường sẽ tổ chức hội thảo về giáo dục 4.0 vào ngày 20/05...',
+      author: 'Ban giám hiệu'
+    },
+    {
+      id: '2',
+      title: 'Lễ tổng kết năm học',
+      date: '18/05/2023',
+      time: '14:00',
+      image: require('@/assets/images/avatar.png'),
+      content: 'Lễ tổng kết năm học 2022-2023 sẽ được tổ chức trọng thể...',
+      author: 'Văn phòng nhà trường'
+    },
+    {
+      id: '3',
+      title: 'Thi học kỳ II',
+      date: '22/05/2023',
+      time: '07:30',
+      image: require('@/assets/images/avatar.png'),
+      content: 'Lịch thi học kỳ II sẽ bắt đầu từ ngày 25/05...',
+      author: 'Phòng đào tạo'
+    },
+    {
+      id: '1',
+      title: 'Hội thảo giáo dục 4.0',
+      date: '16/05/2023',
+      time: '09:32',
+      image: require('@/assets/images/avatar.png'),
+      content: 'Trường sẽ tổ chức hội thảo về giáo dục 4.0 vào ngày 20/05...',
+      author: 'Ban giám hiệu'
+    },
+    {
+      id: '2',
+      title: 'Lễ tổng kết năm học',
+      date: '18/05/2023',
+      time: '14:00',
+      image: require('@/assets/images/avatar.png'),
+      content: 'Lễ tổng kết năm học 2022-2023 sẽ được tổ chức trọng thể...',
+      author: 'Văn phòng nhà trường'
+    },
+    {
+      id: '3',
+      title: 'Thi học kỳ II',
+      date: '22/05/2023',
+      time: '07:30',
+      image: require('@/assets/images/avatar.png'),
+      content: 'Lịch thi học kỳ II sẽ bắt đầu từ ngày 25/05...',
+      author: 'Phòng đào tạo'
+    }
+  ];
+
   const handleFeaturePress = (label: string) => {
-    console.log('Navigating to:', label);
     switch (label) {
       case 'Lớp học':
         router.push('/stack/class');
@@ -58,14 +116,28 @@ export default function Home() {
     }
   };
 
-  const newsData = [
-    {
-      title: 'Tin hot mới nhất trên thế giới',
-      date: '16th May',
-      time: '09:32 pm',
-      image: require('@/assets/images/avatar.png') || null,
-    },
-  ];
+  const handleNewsPress = (newsItem) => {
+    router.push({
+      pathname: '/stack/detail-new',
+      params: {
+        id: newsItem.id,
+        title: newsItem.title,
+        date: newsItem.date,
+        time: newsItem.time,
+        content: newsItem.content,
+        author: newsItem.author
+      }
+    });
+  };
+
+  const handleViewAllNews = () => {
+    router.push({
+      pathname: '/stack/all-new',
+      params: {
+        newsData: JSON.stringify(newsData)
+      }
+    });
+  };
 
   const handleReloadQuote = async () => {
     setIsQuoteLoading(true);
@@ -153,27 +225,33 @@ export default function Home() {
           />
         </View>
 
-        {/* News Section */}
+        {/* News Section - Updated */}
         <View style={styles.newsContainer}>
           <View style={styles.newsHeader}>
             <Text style={styles.newsTitle}>Tin Tức Mới</Text>
-            <TouchableOpacity>
-              <Text style={styles.newsViewAll}>tất cả</Text>
+            <TouchableOpacity onPress={handleViewAllNews}>
+              <Text style={styles.newsViewAll}>Xem tất cả</Text>
             </TouchableOpacity>
           </View>
-          {newsData.length > 0 ? (
-            newsData.map((news, index) => (
-              <NewsItem
-                key={`news-${index}`}
-                title={news.title}
-                date={news.date}
-                time={news.time}
-                image={news.image}
-              />
-            ))
-          ) : (
-            <Text style={styles.noNewsText}>Không có tin tức mới</Text>
-          )}
+          
+          {/* Vertical News List */}
+          <View style={styles.newsList}>
+            {newsData.slice(0, 3).map((item) => (
+              <TouchableOpacity 
+                key={item.id}
+                onPress={() => handleNewsPress(item)}
+                style={styles.newsItem}
+              >
+                <NewsItem
+                  title={item.title}
+                  date={item.date}
+                  time={item.time}
+                  image={item.image}
+                  verticalLayout={true}
+                />
+              </TouchableOpacity>
+            ))}
+          </View>
         </View>
 
         <FooterHome />
@@ -256,10 +334,10 @@ const styles = StyleSheet.create({
     color: '#1E90FF',
     fontWeight: '500',
   },
-  noNewsText: {
-    fontSize: 16,
-    color: '#666666',
-    textAlign: 'center',
-    padding: 16,
+  newsList: {
+    marginTop: 8,
+  },
+  newsItem: {
+    marginBottom: 16,
   },
 });
