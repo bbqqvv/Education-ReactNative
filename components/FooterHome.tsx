@@ -23,7 +23,7 @@ const styles = StyleSheet.create({
     },
     footer: {
         padding: 16,
-        marginTop: 32,
+        marginTop: 28,
     },
     footerText: {
         textAlign: "center",
