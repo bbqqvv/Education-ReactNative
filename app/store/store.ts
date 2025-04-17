@@ -1,24 +1,32 @@
-import { configureStore } from '@reduxjs/toolkit';
+import { configureStore, combineReducers } from '@reduxjs/toolkit';
 import { persistReducer, persistStore } from 'redux-persist';
-import storage from '@react-native-async-storage/async-storage'; // Dùng AsyncStorage thay vì web storage
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import authReducer from './slices/authSlice';
+
+// Gộp các reducer (chuẩn bị cho mở rộng)
+const rootReducer = combineReducers({
+  auth: authReducer,
+});
 
 const persistConfig = {
   key: 'root',
-  storage,
+  storage: AsyncStorage,
+  whitelist: ['auth'], // Chỉ persist auth (sau này thêm gì thì bỏ vào đây)
 };
 
-const persistedReducer = persistReducer(persistConfig, authReducer);
+const persistedReducer = persistReducer(persistConfig, rootReducer);
 
 const store = configureStore({
-  reducer: {
-    auth: persistedReducer,
-  },
+  reducer: persistedReducer,
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: false, // Cần khi dùng redux-persist
+    }),
 });
 
-export const persistor = persistStore(store);
-
+// Export kiểu type để dùng cho hooks
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
 
+export const persistor = persistStore(store);
 export default store;

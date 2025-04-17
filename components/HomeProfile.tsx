@@ -1,23 +1,29 @@
 import { StyleSheet, Text, TouchableOpacity, View, Image } from "react-native";
 import React from "react";
+import { useSelector } from "react-redux";
+import { RootState } from "@/app/store/store";
 
 const HomeProfile = () => {
+    const user = useSelector((state: RootState) => state.auth.user);
+
+    if (!user) {
+        return null; // Hoặc loader
+    }
+
     return (
         <View style={styles.container}>
             {/* Avatar */}
-            <View>
-                <TouchableOpacity>
-                    <Image
-                        source={require("../assets/images/avatar.png")}
-                        style={styles.avatar}
-                    />
-                </TouchableOpacity>
-            </View>
+            <TouchableOpacity>
+                <Image
+                    source={require("../assets/images/avatar.png")}
+                    style={styles.avatar}
+                />
+            </TouchableOpacity>
 
             {/* User Info */}
             <View>
-                <Text style={styles.name}>Van Quoc Bui</Text>
-                <Text style={styles.school}>Trường THPT Trần Cao Vân</Text>
+                <Text style={styles.name}>{user.fullName}</Text>
+                <Text style={styles.school}>{user.studentClass} - THPT TCV</Text>
             </View>
         </View>
     );

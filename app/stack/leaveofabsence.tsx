@@ -1,268 +1,487 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  SafeAreaView,
+  StatusBar,
+  Platform,
+  Animated,
+  Easing,
+  FlatList,
+  ActivityIndicator
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 
+// Types
+type LeaveStatus = 'approved' | 'pending' | 'rejected';
+type FilterStatus = 'all' | LeaveStatus;
+
+interface LeaveApplication {
+  id: number;
+  status: LeaveStatus;
+  applicant: string;
+  reason: string;
+  date: string;
+  days: number;
+  submitted: string;
+  type: string;
+  approvedBy?: string;
+  rejectedReason?: string;
+}
+
+// Sample Data
+const SAMPLE_LEAVE_APPLICATIONS: LeaveApplication[] = [
+  {
+    id: 1,
+    status: 'pending',
+    applicant: 'Bùi Quốc Văn',
+    reason: 'Việc gia đình',
+    date: '03/05/2022 - 03/05/2022',
+    days: 1,
+    submitted: '02/05/2022 08:30',
+    type: 'Nghỉ có phép'
+  },
+  {
+    id: 2,
+    status: 'approved',
+    applicant: 'Nguyễn Văn A',
+    reason: 'Khám bệnh',
+    date: '05/05/2022 - 06/05/2022',
+    days: 2,
+    submitted: '04/05/2022 14:15',
+    type: 'Nghỉ ốm',
+    approvedBy: 'Trưởng phòng Nguyễn Thị B'
+  },
+  {
+    id: 3,
+    status: 'rejected',
+    applicant: 'Trần Thị B',
+    reason: 'Việc cá nhân',
+    date: '10/05/2022 - 11/05/2022',
+    days: 2,
+    submitted: '09/05/2022 09:45',
+    type: 'Nghỉ không lương',
+    rejectedReason: 'Không đủ lý do chính đáng'
+  },
+  {
+    id: 4,
+    status: 'pending',
+    applicant: 'Lê Văn C',
+    reason: 'Đám cưới',
+    date: '15/05/2022 - 16/05/2022',
+    days: 2,
+    submitted: '14/05/2022 10:20',
+    type: 'Nghỉ có phép'
+  }
+];
+
+// Helper Functions
+const getStatusText = (status: LeaveStatus | FilterStatus): string => {
+  const statusMap: Record<string, string> = {
+    approved: 'Đã duyệt',
+    pending: 'Chờ duyệt',
+    rejected: 'Từ chối',
+    all: 'Tất cả'
+  };
+  return statusMap[status] || status;
+};
+
+const getStatusColor = (status: LeaveStatus | FilterStatus): string => {
+  const colorMap: Record<string, string> = {
+    approved: '#10B981',
+    pending: '#F59E0B',
+    rejected: '#EF4444',
+    all: '#6B7280'
+  };
+  return colorMap[status] || '#6B7280';
+};
+
+const getStatusIcon = (status: LeaveStatus): string => {
+  const iconMap: Record<string, string> = {
+    approved: 'checkmark-circle',
+    pending: 'time',
+    rejected: 'close-circle'
+  };
+  return iconMap[status] || 'help-circle';
+};
+
+// Sub Components
+const StatusBadge = React.memo(({ status }: { status: LeaveStatus }) => (
+  <View style={styles.statusBadge}>
+    <Ionicons name={getStatusIcon(status)} size={16} color={getStatusColor(status)} />
+    <Text style={[styles.statusText, { color: getStatusColor(status) }]}>
+      {getStatusText(status)}
+    </Text>
+  </View>
+));
+
+const LeaveCard = React.memo(({ item }: { item: LeaveApplication }) => {
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  React.useEffect(() => {
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 500,
+      easing: Easing.out(Easing.quad),
+      useNativeDriver: true,
+    }).start();
+  }, []);
+
+  return (
+    <Animated.View style={[styles.leaveCard, { opacity: fadeAnim }]}>
+      <View style={styles.cardHeader}>
+        <StatusBadge status={item.status} />
+        <Text style={styles.daysBadge}>
+          {item.days} {item.days > 1 ? 'ngày' : 'ngày'}
+        </Text>
+      </View>
+
+      <View style={styles.cardBody}>
+        <Text style={styles.applicantText}>{item.applicant}</Text>
+        <Text style={styles.reasonText}>{item.reason}</Text>
+
+        <View style={styles.detailRow}>
+          <Ionicons name="calendar" size={16} color="#6B7280" />
+          <Text style={styles.detailText}>{item.date}</Text>
+        </View>
+
+        <View style={styles.detailRow}>
+          <Ionicons name="time" size={16} color="#6B7280" />
+          <Text style={styles.detailText}>Gửi: {item.submitted}</Text>
+        </View>
+
+        <View style={styles.detailRow}>
+          <Ionicons name="document-text" size={16} color="#6B7280" />
+          <Text style={styles.detailText}>Loại: {item.type}</Text>
+        </View>
+
+        {item.status === 'approved' && (
+          <View style={styles.detailRow}>
+            <Ionicons name="checkmark" size={16} color="#10B981" />
+            <Text style={[styles.detailText, { color: '#10B981' }]}>
+              Người duyệt: {item.approvedBy}
+            </Text>
+          </View>
+        )}
+
+        {item.status === 'rejected' && (
+          <View style={styles.detailRow}>
+            <Ionicons name="close" size={16} color="#EF4444" />
+            <Text style={[styles.detailText, { color: '#EF4444' }]}>
+              Lý do từ chối: {item.rejectedReason}
+            </Text>
+          </View>
+        )}
+      </View>
+    </Animated.View>
+  );
+});
+
+const FilterTab = React.memo(({
+  status,
+  isActive,
+  count,
+  onPress
+}: {
+  status: FilterStatus;
+  isActive: boolean;
+  count: number;
+  onPress: (status: FilterStatus) => void
+}) => (
+  <TouchableOpacity
+    style={[
+      styles.tabButton,
+      isActive && styles.activeTabButton,
+      isActive && { borderBottomColor: getStatusColor(status) }
+    ]}
+    onPress={() => onPress(status)}
+    activeOpacity={0.7}
+  >
+    <Text style={[
+      styles.tabText,
+      isActive && { color: getStatusColor(status) }
+    ]}>
+      {getStatusText(status)}
+      {status !== 'all' && ` (${count})`}
+    </Text>
+  </TouchableOpacity>
+));
+
+// Main Component
 const LeaveList = () => {
   const router = useRouter();
-  const [activeStatus, setActiveStatus] = useState<'all' | 'approved' | 'pending' | 'rejected'>('all');
-  
-  const handleBack = () => {
-    router.back();
-  };
+  const [activeStatus, setActiveStatus] = useState<FilterStatus>('all');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleCreateLeave = () => {
-    router.push('/stack/leaveform');
-  };
+  // Simulate loading data
+  React.useEffect(() => {
+    setIsLoading(true);
+    const timer = setTimeout(() => setIsLoading(false), 800);
+    return () => clearTimeout(timer);
+  }, []);
 
-  // Sample data
-  const leaveApplications = [
-    {
-      id: 1,
-      status: 'pending',
-      applicant: 'Bùi Quốc Văn',
-      reason: 'Việc gia đình',
-      date: '03/05/2022 - 03/05/2022'
-    },
-    {
-      id: 2,
-      status: 'approved',
-      applicant: 'Nguyễn Văn A',
-      reason: 'Khám bệnh',
-      date: '05/05/2022 - 06/05/2022'
-    },
-    {
-      id: 3,
-      status: 'rejected',
-      applicant: 'Trần Thị B',
-      reason: 'Việc cá nhân',
-      date: '10/05/2022 - 11/05/2022'
-    },
-    {
-      id: 4,
-      status: 'pending',
-      applicant: 'Lê Văn C',
-      reason: 'Đám cưới',
-      date: '15/05/2022 - 16/05/2022'
-    }
-  ];
+  // Filter and count applications
+  const { filteredApplications, statusCounts } = useMemo(() => {
+    const counts = {
+      all: SAMPLE_LEAVE_APPLICATIONS.length,
+      approved: 0,
+      pending: 0,
+      rejected: 0,
+    };
 
-  // Lọc đơn theo trạng thái
-  const filteredApplications = leaveApplications.filter(app => {
-    if (activeStatus === 'all') return true;
-    return app.status === activeStatus;
-  });
+    const filtered = SAMPLE_LEAVE_APPLICATIONS.filter(app => {
+      counts[app.status]++;
+      return activeStatus === 'all' || app.status === activeStatus;
+    });
 
-  // Đếm số lượng từng trạng thái
-  const statusCounts = {
-    approved: leaveApplications.filter(app => app.status === 'approved').length,
-    pending: leaveApplications.filter(app => app.status === 'pending').length,
-    rejected: leaveApplications.filter(app => app.status === 'rejected').length,
-  };
+    return { filteredApplications: filtered, statusCounts: counts };
+  }, [activeStatus]);
 
-  // Chuyển đổi trạng thái sang tiếng Việt
-  const getStatusText = (status) => {
-    switch(status) {
-      case 'approved': return 'Đã duyệt';
-      case 'pending': return 'Chờ duyệt';
-      case 'rejected': return 'Từ chối';
-      default: return status;
-    }
-  };
-
-  // Màu sắc cho từng trạng thái
-  const getStatusColor = (status) => {
-    switch(status) {
-      case 'approved': return '#4CAF50'; // Xanh lá
-      case 'pending': return '#FFA000'; // Cam
-      case 'rejected': return '#F44336'; // Đỏ
-      default: return '#333';
-    }
-  };
+  const handleBack = () => router.back();
+  const handleCreateLeave = () => router.push('/stack/leaveform');
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={handleBack}>
-          <Ionicons name="arrow-back" size={24} color="white" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Xin nghỉ</Text>
-        <View style={{ width: 24 }} />
-      </View>
+      <StatusBar barStyle="light-content" />
 
-      {/* Status Filter */}
-      <View style={styles.statusContainer}>
-        <TouchableOpacity 
-          style={[
-            styles.statusButton, 
-            activeStatus === 'all' && styles.activeStatusButton
-          ]}
-          onPress={() => setActiveStatus('all')}
-        >
-          <Text style={styles.statusText}>Tất cả</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={[
-            styles.statusButton, 
-            activeStatus === 'approved' && styles.activeStatusButton,
-            { borderColor: '#4CAF50' }
-          ]}
-          onPress={() => setActiveStatus('approved')}
-        >
-          <Text style={styles.statusText}>Đã duyệt ({statusCounts.approved})</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={[
-            styles.statusButton, 
-            activeStatus === 'pending' && styles.activeStatusButton,
-            { borderColor: '#FFA000' }
-          ]}
-          onPress={() => setActiveStatus('pending')}
-        >
-          <Text style={styles.statusText}>Chờ duyệt ({statusCounts.pending})</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={[
-            styles.statusButton, 
-            activeStatus === 'rejected' && styles.activeStatusButton,
-            { borderColor: '#F44336' }
-          ]}
-          onPress={() => setActiveStatus('rejected')}
-        >
-          <Text style={styles.statusText}>Từ chối ({statusCounts.rejected})</Text>
-        </TouchableOpacity>
-      </View>
+      {/* Header with Gradient */}
+      <LinearGradient
+        colors={['#06b6d4', '#0891b2']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={styles.header}
+      >
+        <View style={styles.headerContent}>
+          <TouchableOpacity
+            onPress={handleBack}
+            style={styles.backButton}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="arrow-back" size={24} color="#fff" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Đơn Xin Nghỉ</Text>
+          <View style={styles.headerRight} />
+        </View>
+      </LinearGradient>
 
-      <View style={styles.divider} />
-
-      {/* Leave Applications List */}
-      <ScrollView contentContainerStyle={styles.listContainer}>
-        {filteredApplications.map((item) => (
-          <View key={item.id} style={styles.leaveCard}>
-            <Text style={[styles.cardTitle, { color: getStatusColor(item.status) }]}>
-              {getStatusText(item.status)}
-            </Text>
-            <View style={styles.cardContent}>
-              <Text style={styles.cardText}><Text style={styles.boldText}>Người làm đơn:</Text> {item.applicant}</Text>
-              <Text style={styles.cardText}><Text style={styles.boldText}>Lý do:</Text> {item.reason}</Text>
-              <Text style={styles.cardText}><Text style={styles.boldText}>Nghỉ từ:</Text> {item.date}</Text>
-            </View>
-          </View>
+      {/* Status Filter Tabs */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.tabContainer}
+      >
+        {(['all', 'pending', 'approved', 'rejected'] as FilterStatus[]).map((status) => (
+          <FilterTab
+            key={status}
+            status={status}
+            isActive={activeStatus === status}
+            count={statusCounts[status]}
+            onPress={setActiveStatus}
+          />
         ))}
       </ScrollView>
 
+      {/* Loading State */}
+      {isLoading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#06b6d4" />
+        </View>
+      ) : (
+        /* Leave Applications List */
+        <FlatList
+          data={filteredApplications}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={({ item }) => <LeaveCard item={item} />}
+          ListEmptyComponent={
+            <View style={styles.emptyState}>
+              <Ionicons name="file-tray" size={48} color="#D1D5DB" />
+              <Text style={styles.emptyText}>Không có đơn nào</Text>
+              <Text style={styles.emptySubtext}>Bạn chưa có đơn xin nghỉ nào ở mục này</Text>
+            </View>
+          }
+          contentContainerStyle={styles.listContainer}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
+
       {/* Create New Leave Button */}
-      <TouchableOpacity style={styles.createButton} onPress={handleCreateLeave}>
-        <Text style={styles.createButtonText}>Viết đơn xin nghỉ</Text>
+      <TouchableOpacity
+        style={styles.createButton}
+        onPress={handleCreateLeave}
+        activeOpacity={0.8}
+      >
+        <Ionicons name="add" size={24} color="#fff" />
+        <Text style={styles.createButtonText}>Tạo đơn xin nghỉ mới</Text>
       </TouchableOpacity>
     </View>
   );
 };
 
+// Styles
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#F9FAFB',
   },
   header: {
-    backgroundColor: '#59CBE8',
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 50,
+    paddingBottom: 16,
+    paddingHorizontal: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingTop: 50,
-    paddingBottom: 16,
+  },
+  backButton: {
+    padding: 4,
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#fff',
+    color: "#fff",
+    fontSize: 20,
+    fontWeight: "600",
+    textAlign: 'center',
   },
-  statusContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  headerRight: {
+    width: 32,
+  },
+  tabContainer: {
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#F8F8F8',
-    flexWrap: 'wrap',
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
   },
-  statusButton: {
-    borderWidth: 2,
-    borderRadius: 20,
-    padding: 8,
-    marginVertical: 4,
-    backgroundColor: '#fff',
+  tabButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginRight: 16,
   },
-  activeStatusButton: {
-    backgroundColor: '#E3F2FD',
+  activeTabButton: {
+    borderBottomWidth: 2,
   },
-  statusText: {
+  tabText: {
     fontSize: 14,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  divider: {
-    height: 1,
-    backgroundColor: '#E0E0E0',
+    fontWeight: '600',
+    color: '#6B7280',
   },
   listContainer: {
     padding: 16,
-    paddingBottom: 80,
+    paddingBottom: 100,
   },
   leaveCard: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
     padding: 16,
     marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  cardTitle: {
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  statusText: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 6,
+  },
+  daysBadge: {
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#3B82F6',
+  },
+  cardBody: {
+    gap: 8,
+  },
+  applicantText: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '600',
+    color: '#1F2937',
+  },
+  reasonText: {
+    fontSize: 14,
+    color: '#4B5563',
     marginBottom: 8,
   },
-  cardContent: {
-    marginLeft: 4,
+  detailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  cardText: {
+  detailText: {
+    fontSize: 13,
+    color: '#6B7280',
+    marginLeft: 8,
+  },
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#6B7280',
+    marginTop: 16,
+    fontWeight: '500',
+  },
+  emptySubtext: {
     fontSize: 14,
-    marginBottom: 6,
-    color: '#333',
-  },
-  boldText: {
-    fontWeight: 'bold',
+    color: '#9CA3AF',
+    marginTop: 4,
   },
   createButton: {
     position: 'absolute',
     bottom: 20,
     left: 16,
     right: 16,
-    backgroundColor: '#59CBE8',
+    backgroundColor: '#06b6d4',
+    borderRadius: 12,
     padding: 16,
-    borderRadius: 8,
-    alignItems: 'center',
+    flexDirection: 'row',
     justifyContent: 'center',
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    alignItems: 'center',
+    shadowColor: '#06b6d4',
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
-    shadowRadius: 2,
+    shadowRadius: 8,
+    elevation: 3,
   },
   createButtonText: {
-    color: '#fff',
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '600',
+    color: '#fff',
+    marginLeft: 8,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

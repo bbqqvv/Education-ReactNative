@@ -9,7 +9,9 @@ const apiClient = axios.create({
 
 // Interceptor xử lý token
 apiClient.interceptors.request.use(async (config) => {
-    const token = await SecureStore.getItemAsync('auth_token');
+    const token = await SecureStore.getItemAsync('authToken');
+    console.log('Token:', token); // Log token
+
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
     }

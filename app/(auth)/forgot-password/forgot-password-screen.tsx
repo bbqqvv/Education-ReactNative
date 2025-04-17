@@ -31,7 +31,7 @@ export default function ForgotPassword() {
     }
 
     setEmailError("");
-    router.push("/forgot-password/components/otp");
+    router.push("/(auth)/forgot-password/components/otp");
   };
 
   return (

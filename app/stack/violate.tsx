@@ -1,331 +1,241 @@
-
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  FlatList,
+  Animated,
+  Easing,
+  Platform,
+  StatusBar,
+} from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import ViolationDetail from './violate-detail';
+
+type ViolationLevel = 'LOW' | 'MEDIUM' | 'HIGH';
+
+export type Violation = {
+  id: string;
+  studentCode: string;
+  fullName: string;
+  role: string;
+  description: string;
+  level: ViolationLevel;
+  createdAt: string;
+  createdBy: string;
+};
 
 const ViolationScreen = () => {
   const router = useRouter();
-  const [selectedViolation, setSelectedViolation] = useState(null);
+  const [selectedViolation, setSelectedViolation] = useState<Violation | null>(null);
+  const fadeAnim = React.useRef(new Animated.Value(0)).current;
+
+  React.useEffect(() => {
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 300,
+      easing: Easing.out(Easing.quad),
+      useNativeDriver: true,
+    }).start();
+  }, []);
 
   const handleBackPress = () => {
-    router.push('/(tabs)/home');
+    // Nếu đang ở màn danh sách vi phạm thì quay về tab home
+    if (!selectedViolation) {
+      router.push('/(tabs)/home');
+    } else {
+      // Nếu đang ở màn chi tiết, chỉ quay lại danh sách
+      setSelectedViolation(null);
+    }
   };
+  React.useEffect(() => {
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 300,
+      easing: Easing.out(Easing.quad),
+      useNativeDriver: true,
+    }).start();
+  }, []);
 
-  const violations = [
+
+  const violations: Violation[] = [
     {
       id: "123",
       studentCode: "B21DCCN001",
       fullName: "Bùi Quốc Văn",
       role: "STUDENT",
-      description: "Bị tố an trap",
+      description: "Vi phạm nội quy lớp học: Sử dụng điện thoại trong giờ học",
       level: "HIGH",
       createdAt: "2025-04-11T15:30:00",
-      createdBy: "giangvien01"
+      createdBy: "Giáo viên Nguyễn Văn A"
     },
     {
       id: "124",
-      studentCode: "B21DCCN001",
+      studentCode: "B21DCCN002",
       fullName: "Nguyễn Văn Thành",
       role: "STUDENT",
-      description: "Ko tỏ tình huỳnh minh",
+      description: "Đi học muộn 15 phút",
       level: "MEDIUM",
-      createdAt: "2025-04-11T15:30:00",
-      createdBy: "giangvien01"
+      createdAt: "2025-04-10T08:15:00",
+      createdBy: "Giáo viên Trần Thị B"
     },
     {
       id: "125",
-      studentCode: "B21DCCN001",
+      studentCode: "B21DCCN003",
       fullName: "Đàm Phương Nam",
       role: "STUDENT",
-      description: "Bị liễu đùa giỡn tình cảm",
-      level: "HIGH",
-      createdAt: "2025-04-11T15:30:00",
-      createdBy: "giangvien01"
+      description: "Không làm bài tập về nhà",
+      level: "LOW",
+      createdAt: "2025-04-09T10:45:00",
+      createdBy: "Giáo viên Lê Văn C"
     },
-    // ... thêm các vi phạm khác nếu cần
+    {
+      id: "126",
+      studentCode: "B21DCCN004",
+      fullName: "Trần Thị Minh Anh",
+      role: "STUDENT",
+      description: "Nói chuyện riêng nhiều lần trong giờ học",
+      level: "MEDIUM",
+      createdAt: "2025-04-08T14:20:00",
+      createdBy: "Giáo viên Phạm Thị D"
+    },
   ];
 
-  const getViolationLevel = (level) => {
-    switch (level) {
-      case 'LOW': return 'Nhẹ';
-      case 'MEDIUM': return 'Trung bình';
-      case 'HIGH': return 'Nặng';
-      default: return level;
-    }
+  const getViolationLevelText = (level: ViolationLevel): string => {
+    const levelMap: Record<ViolationLevel, string> = {
+      LOW: 'Nhẹ',
+      MEDIUM: 'Trung bình',
+      HIGH: 'Nặng'
+    };
+    return levelMap[level] || level;
   };
 
+  const getLevelColor = (level: ViolationLevel): string => {
+    const colorMap: Record<ViolationLevel, string> = {
+      LOW: '#4CAF50',
+      MEDIUM: '#FFA000',
+      HIGH: '#F44336'
+    };
+    return colorMap[level] || '#9E9E9E';
+  };
 
-  const formatDate = (dateString) => {
+  const formatDate = (dateString: string): string => {
     const date = new Date(dateString);
-    return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()} ${date.getHours()}:${date.getMinutes()}`;
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    return `${day}/${month}/${date.getFullYear()} ${hours}:${minutes}`;
   };
+
+  const renderViolationItem = ({ item }: { item: Violation }) => (
+    <Animated.View style={{ opacity: fadeAnim }}>
+      <TouchableOpacity
+        onPress={() => setSelectedViolation(item)}
+        style={styles.violationCard}
+        activeOpacity={0.8}
+      >
+        <View style={styles.cardHeader}>
+          <View style={styles.studentInfo}>
+            <Text style={styles.cardName}>{item.fullName}</Text>
+            <Text style={styles.cardCode}>{item.studentCode}</Text>
+          </View>
+          <View style={[styles.levelBadge, { backgroundColor: getLevelColor(item.level) }]}>
+            <Text style={styles.levelText}>{getViolationLevelText(item.level)}</Text>
+          </View>
+        </View>
+        <Text style={styles.cardDate}>
+          <Ionicons name="time-outline" size={14} color="#757575" /> {formatDate(item.createdAt)}
+        </Text>
+        <Text style={styles.cardDescription} numberOfLines={2}>
+          {item.description}
+        </Text>
+        <View style={styles.cardFooter}>
+          <Text style={styles.createdByText}>Ghi nhận bởi: {item.createdBy}</Text>
+        </View>
+      </TouchableOpacity>
+    </Animated.View>
+  );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, selectedViolation && { backgroundColor: '#FFFFFF' }]}>
       {!selectedViolation ? (
         <>
-          <View style={styles.header}>
-            <TouchableOpacity onPress={handleBackPress}>
+          <LinearGradient
+            colors={['#4A90E2', '#59CBE8']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.header}
+          >
+            <TouchableOpacity onPress={handleBackPress} style={styles.backButton}>
               <Ionicons name="arrow-back" size={24} color="white" />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Danh sách vi phạm</Text>
-            <View style={{ width: 24 }} /> {/* Placeholder để căn giữa tiêu đề */}
-          </View>
-          
-          <ScrollView contentContainerStyle={styles.listContainer}>
-            {violations.map((violation) => (
-              <TouchableOpacity
-                key={violation.id}
-                onPress={() => setSelectedViolation(violation)}
-                style={styles.violationCard}
-              >
-                <View style={styles.cardHeader}>
-                  <Text style={styles.cardName}>{violation.fullName}</Text>
-                  <Text style={[styles.cardLevel, styles[`level${violation.level}`]]}>
-                    {getViolationLevel(violation.level)}
-                  </Text>
-                </View>
-                <Text style={styles.cardCode}>MSSV: {violation.studentCode}</Text>
-                <Text style={styles.cardDate}>{formatDate(violation.createdAt)}</Text>
-                <Text numberOfLines={1} style={styles.cardDescription}>{violation.description}</Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+            <View style={{ width: 24 }} />
+          </LinearGradient>
+
+          <FlatList
+            data={violations}
+            renderItem={renderViolationItem}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={styles.listContainer}
+            showsVerticalScrollIndicator={false}
+            ListEmptyComponent={
+              <View style={styles.emptyState}>
+                <Ionicons name="checkmark-circle" size={48} color="#E0E0E0" />
+                <Text style={styles.emptyText}>Không có vi phạm nào</Text>
+                <Text style={styles.emptySubText}>Hiện không có vi phạm nào được ghi nhận</Text>
+              </View>
+            }
+          />
         </>
       ) : (
-        <View style={styles.detailWrapper}>
-          {/* Header chi tiết */}
-          <View style={styles.detailHeader}>
-            <TouchableOpacity onPress={() => setSelectedViolation(null)}>
-              <Ionicons name="arrow-back" size={24} color="white" />
-            </TouchableOpacity>
-            <Text style={styles.detailHeaderTitle}>Chi tiết vi phạm</Text>
-            <View style={{ width: 24 }} />
-          </View>
-          
-          {/* Nội dung chi tiết */}
-          <ScrollView contentContainerStyle={styles.detailContent}>
-            <View style={styles.detailSection}>
-              <Text style={styles.sectionTitle}>Thông tin học sinh</Text>
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Mã sinh viên:</Text>
-                <Text style={styles.infoValue}>{selectedViolation.studentCode}</Text>
-              </View>
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Họ và tên:</Text>
-                <Text style={styles.infoValue}>{selectedViolation.fullName}</Text>
-              </View>
-            </View>
-
-            <View style={styles.detailSection}>
-              <Text style={styles.sectionTitle}>Thông tin vi phạm</Text>
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Mức độ:</Text>
-                <Text style={[styles.infoValue, styles[`level${selectedViolation.level}`]]}>
-                  {getViolationLevel(selectedViolation.level)}
-                </Text>
-              </View>
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Ngày vi phạm:</Text>
-                <Text style={styles.infoValue}>{formatDate(selectedViolation.createdAt)}</Text>
-              </View>
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Người ghi nhận:</Text>
-                <Text style={styles.infoValue}>{selectedViolation.createdBy}</Text>
-              </View>
-            </View>
-
-            <View style={styles.detailSection}>
-              <Text style={styles.sectionTitle}>Mô tả chi tiết</Text>
-              <View style={styles.descriptionBox}>
-                <Text style={styles.descriptionText}>{selectedViolation.description}</Text>
-              </View>
-            </View>
-
-            <View style={styles.footer}>
-              <Image 
-                style={styles.footerImage} 
-                source={require("@/assets/images/img-rm.png")} 
-              />
-              <Text style={styles.footerText}>
-                &copy; 2025 Trường THPT Trần Cao Vân. All rights reserved.
-              </Text>
-            </View>
-          </ScrollView>
-        </View>
+        <ViolationDetail
+          violation={selectedViolation}
+          onBack={handleBackPress}
+        />
       )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
+  container: { flex: 1, backgroundColor: '#F5F5F5' },
   header: {
-    backgroundColor: '#59CBE8',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingTop: 50,
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight! + 16 : 50,
     paddingBottom: 16,
+    elevation: 5,
   },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#fff',
-    textAlign: 'center',
-  },
-  listContainer: {
-    padding: 16,
-    paddingBottom: 20,
-  },
+  backButton: { padding: 4 },
+  headerTitle: { fontSize: 18, fontWeight: '600', color: 'white' },
+  listContainer: { padding: 16, paddingBottom: 20 },
   violationCard: {
-    backgroundColor: '#fff',
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#eaeaea',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
     elevation: 2,
   },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  cardName: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  cardLevel: {
-    fontSize: 14,
-    fontWeight: '600',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-  },
-  cardCode: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 4,
-  },
-  cardDate: {
-    fontSize: 13,
-    color: '#888',
-    marginBottom: 8,
-  },
-  cardDescription: {
-    fontSize: 14,
-    color: '#444',
-    lineHeight: 20,
-  },
-  // Chi tiết vi phạm
-  detailWrapper: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  detailHeader: {
-    backgroundColor: '#59CBE8',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingTop: 50,
-    paddingBottom: 16,
-  },
-  detailHeaderTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  detailContent: {
-    padding: 16,
-    paddingBottom: 40,
-  },
-  detailSection: {
-    backgroundColor: '#f8f8f8',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-
-    color: '#59CBE8',
-    marginBottom: 12,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  infoLabel: {
-    fontSize: 14,
-    color: '#666',
-    flex: 1,
-  },
-  infoValue: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#333',
-    flex: 1,
-    textAlign: 'right',
-  },
-  descriptionBox: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: '#eee',
-  },
-  descriptionText: {
-    fontSize: 14,
-    lineHeight: 20,
-    color: '#333',
-  },
-  // Màu mức độ
-  levelLOW: {
-    color: '#4CAF50',
-    backgroundColor: '#E8F5E9',
-  },
-  levelMEDIUM: {
-    color: '#FFC107',
-    backgroundColor: '#FFF8E1',
-  },
-  levelHIGH: {
-    color: '#F44336',
-    backgroundColor: '#FFEBEE',
-  },
-  // Footer
-  footer: {
-    alignItems: 'center',
-    marginTop: 24,
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#eee',
-    backgroundColor: '#F8F8F8',
-  },
-  footerImage: {
-    width: 80,
-    height: 80,
-    marginBottom: 8,
-  },
-  footerText: {
-    fontSize: 12,
-    color: '#999',
-    textAlign: 'center',
-  },
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  studentInfo: { flex: 1 },
+  cardName: { fontSize: 16, fontWeight: '600', color: '#212121' },
+  cardCode: { fontSize: 13, color: '#757575', marginTop: 2 },
+  levelBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
+  levelText: { fontSize: 12, fontWeight: '600', color: 'white' },
+  cardDate: { fontSize: 13, color: '#757575', marginBottom: 8 },
+  cardDescription: { fontSize: 14, color: '#424242', lineHeight: 20, marginBottom: 8 },
+  cardFooter: { borderTopWidth: 1, borderTopColor: '#EEEEEE', paddingTop: 8, marginTop: 4 },
+  createdByText: { fontSize: 12, color: '#9E9E9E', fontStyle: 'italic' },
+  emptyState: { alignItems: 'center', justifyContent: 'center', paddingVertical: 40 },
+  emptyText: { fontSize: 16, color: '#616161', marginTop: 16, fontWeight: '500' },
+  emptySubText: { fontSize: 14, color: '#9E9E9E', marginTop: 4 },
 });
 
 export default ViolationScreen;

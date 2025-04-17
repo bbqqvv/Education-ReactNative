@@ -15,7 +15,7 @@ import * as LocalAuthentication from "expo-local-authentication";
 import * as SecureStore from "expo-secure-store";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/app/store/store";
-import { loginUser } from "@/app/store/slices/authSlice";
+import { fetchUserInfo, loginUser } from "@/app/store/slices/authSlice";
 import { AppDispatch } from "@/app/store/store";
 import { Platform } from "react-native";
 
@@ -45,6 +45,7 @@ export default function LoginPage() {
     }
   }, [error]);
 
+  // Lưu token vào AsyncStorage sau khi đăng nhập thành công
   const handleSubmit = async () => {
     if (!email || !password) {
       setLocalError("Vui lòng nhập đầy đủ email và mật khẩu.");
@@ -52,14 +53,24 @@ export default function LoginPage() {
     }
 
     setLocalError("");
-    // Dispatch login action
-    dispatch(loginUser({ email, password }));
 
-    if (Platform.OS !== "web") {
-      await SecureStore.setItemAsync("email", email);
-      await SecureStore.setItemAsync("password", password);
+    try {
+      const resultAction = await dispatch(loginUser({ email, password }));
+
+      if (loginUser.fulfilled.match(resultAction)) {
+        // Lưu token vào SecureStore
+        await SecureStore.setItemAsync('authToken', resultAction.payload.token);
+        dispatch(fetchUserInfo());
+      } else {
+        const errorMsg = resultAction.payload || "Đăng nhập thất bại";
+        setLocalError(errorMsg);
+      }
+    } catch (err) {
+      console.error("Lỗi khi đăng nhập:", err);
+      setLocalError("Đăng nhập thất bại. Vui lòng thử lại.");
     }
   };
+
 
   const handleBiometricAuth = async () => {
     try {
@@ -83,11 +94,15 @@ export default function LoginPage() {
       });
 
       if (result.success) {
-        setEmail(savedEmail);
-        setPassword(savedPassword);
-        dispatch(loginUser({ email: savedEmail, password: savedPassword }));
-      } else {
-        Alert.alert("Xác thực thất bại", result.error || "Không thể xác thực");
+        const loginResult = await dispatch(
+          loginUser({ email: savedEmail, password: savedPassword })
+        );
+
+        if (loginUser.fulfilled.match(loginResult)) {
+          dispatch(fetchUserInfo());
+        } else {
+          Alert.alert("Đăng nhập thất bại", "Không thể đăng nhập bằng sinh trắc học.");
+        }
       }
     } catch (err) {
       console.error("Biometric auth failed", err);
@@ -225,19 +240,11 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#fff",
   },
   card: {
     width: "90%",
     maxWidth: 400,
     padding: 20,
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
@@ -331,9 +338,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#06b6d4",
     marginTop: 16,
-    backgroundColor: "#f8fafc",
   },
   biometricButtonText: {
     color: "#06b6d4",

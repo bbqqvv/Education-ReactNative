@@ -33,7 +33,8 @@ export const loginUser = createAsyncThunk<JwtResponse, AuthenticationRequest, { 
     async (data, thunkAPI) => {
         try {
             const response = await AuthApi.login(data);
-            await AsyncStorage.setItem('authToken', response.token); // Lưu token vào AsyncStorage
+            await AsyncStorage.setItem('authToken', response.token);
+            console.log("Token:", response)
             return response;
         } catch (err) {
             console.log("Login error:", err);
@@ -46,37 +47,43 @@ export const loginUser = createAsyncThunk<JwtResponse, AuthenticationRequest, { 
 export const fetchUserInfo = createAsyncThunk<UserResponse, void, { rejectValue: string }>(
     'auth/fetchUserInfo',
     async (_, thunkAPI) => {
+        console.log("⚡ fetchUserInfo thunk được gọi"); // ✅
         try {
             const response = await UserApi.getCurrentUser();
+            console.log("📥 API response from getCurrentUser:", response); // ✅
+
             if (!response || !response.data) {
                 return thunkAPI.rejectWithValue('Không có dữ liệu người dùng');
             }
             return response.data;
         } catch (err) {
+            console.error("❌ fetchUserInfo error:", err); // ✅
             return thunkAPI.rejectWithValue('Không thể lấy thông tin người dùng');
         }
     }
 );
 
+
 // Đăng xuất
 export const logoutUser = createAsyncThunk('auth/logoutUser', async () => {
-    await AsyncStorage.removeItem('authToken'); // Xóa token khi đăng xuất
+    await AsyncStorage.removeItem('authToken');
+    return true;
 });
 
 const authSlice = createSlice({
     name: 'auth',
     initialState,
     reducers: {
-        setToken: (state, action: PayloadAction<string>) => {
+        setToken: (state, action: PayloadAction<string | null>) => {
             state.token = action.payload;
         },
-        setUser: (state, action: PayloadAction<UserInfo>) => {
+        setUser: (state, action: PayloadAction<UserInfo | null>) => {
             state.user = action.payload;
         },
     },
     extraReducers: (builder) => {
         builder
-            // Login
+            // Đăng nhập
             .addCase(loginUser.pending, (state) => {
                 state.loading = true;
                 state.error = null;
@@ -90,12 +97,13 @@ const authSlice = createSlice({
                 state.error = action.payload ?? 'Lỗi không xác định';
             })
 
-            // Fetch User Info
+            // Lấy thông tin người dùng
             .addCase(fetchUserInfo.pending, (state) => {
                 state.loading = true;
             })
             .addCase(fetchUserInfo.fulfilled, (state, action) => {
                 state.loading = false;
+                state.user = action.payload;
                 state.user = {
                     fullName: action.payload.fullName,
                     email: action.payload.email,
@@ -109,10 +117,9 @@ const authSlice = createSlice({
                 state.token = null;
                 state.user = null;
                 state.error = action.payload ?? 'Không thể lấy thông tin người dùng';
-                AsyncStorage.removeItem('authToken'); // Xóa token khi không thể lấy thông tin người dùng
-            })
-
-            // Logout
+                AsyncStorage.removeItem('authToken'); // Xóa token nếu không lấy được user info
+              })
+            // Đăng xuất
             .addCase(logoutUser.fulfilled, (state) => {
                 state.token = null;
                 state.user = null;
@@ -121,5 +128,6 @@ const authSlice = createSlice({
     },
 });
 
+// Export actions và reducer
 export const { setToken, setUser } = authSlice.actions;
 export default authSlice.reducer;
