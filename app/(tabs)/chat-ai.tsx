@@ -6,22 +6,30 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
-  SafeAreaView,
   KeyboardAvoidingView,
   Platform,
   Image,
   Animated,
-  Easing
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import { useChatAi } from '../hooks/useChatAI';
+import { Keyboard, TouchableWithoutFeedback } from 'react-native';
+
+interface ChatMessage {
+  text: string;
+  isUser: boolean;
+  timestamp: string;
+}
 
 export default function ChatAi() {
-  const [messages, setMessages] = useState<{ text: string; isUser: boolean; timestamp: string }[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
   const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  // Use the custom hook
+  const { chatWithAi, loading: isTyping, error, reset } = useChatAi();
 
   const getTimeString = () => {
     const now = new Date();
@@ -36,34 +44,37 @@ export default function ChatAi() {
     }).start();
   }, []);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!input.trim()) return;
 
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    const userMessage = { text: input, isUser: true, timestamp: getTimeString() };
+    const userMessage = {
+      text: input,
+      isUser: true,
+      timestamp: getTimeString()
+    };
     setMessages(prev => [...prev, userMessage]);
     setInput('');
-    setIsTyping(true);
 
-    setTimeout(() => {
+    try {
+      // Call the API using the custom hook
+      const response = await chatWithAi({ message: input });
+
       const aiMessage = {
-        text: generateAIResponse(input),
+        text: response.reply, // Assuming the response has a 'message' property
         isUser: false,
         timestamp: getTimeString(),
       };
       setMessages(prev => [...prev, aiMessage]);
-      setIsTyping(false);
-    }, 1500 + Math.random() * 1000); // Random delay for more natural feel
-  };
-
-  const generateAIResponse = (userInput: string) => {
-    const responses = [
-      `Tôi hiểu bạn đang nói về "${userInput}". Đây là một số thông tin hữu ích...`,
-      `Cảm ơn câu hỏi của bạn! Về vấn đề "${userInput}", tôi có thể trả lời như sau...`,
-      `Tôi đã nhận được yêu cầu về "${userInput}". Đây là phản hồi của tôi...`,
-      `Câu hỏi thú vị! Về "${userInput}", tôi tìm thấy những thông tin sau...`
-    ];
-    return responses[Math.floor(Math.random() * responses.length)];
+    } catch (err) {
+      // Handle error (the hook already sets the error state)
+      const errorMessage = {
+        text: 'Xin lỗi, có lỗi xảy ra. Vui lòng thử lại sau.',
+        isUser: false,
+        timestamp: getTimeString(),
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    }
   };
 
   useEffect(() => {
@@ -71,6 +82,13 @@ export default function ChatAi() {
       scrollViewRef.current.scrollToEnd({ animated: true });
     }
   }, [messages, isTyping]);
+
+  useEffect(() => {
+    if (error) {
+      // You can show an alert or handle the error in another way
+      console.error('Chat error:', error);
+    }
+  }, [error]);
 
   return (
     <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
@@ -156,45 +174,61 @@ export default function ChatAi() {
             </View>
           )}
         </ScrollView>
-
-        {/* Input Area */}
         <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 40 : 0} // Giảm offset
         >
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.input}
-              placeholder="Nhập tin nhắn..."
-              placeholderTextColor="#9CA3AF"
-              value={input}
-              onChangeText={setInput}
-              onSubmitEditing={handleSend}
-              multiline
-              blurOnSubmit={false}
-            />
-            <TouchableOpacity
-              onPress={handleSend}
-              style={[
-                styles.sendButton,
-                !input.trim() && styles.disabledButton
-              ]}
-              disabled={!input.trim()}
-              activeOpacity={0.7}
-            >
-              <Ionicons
-                name="send"
-                size={20}
-                color={input.trim() ? "#fff" : "#9CA3AF"}
-              />
-            </TouchableOpacity>
-          </View>
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View style={styles.safeArea}>
+              {/* Header + ScrollView */}
+              <ScrollView
+                ref={scrollViewRef}
+                style={styles.chatContainer}
+                contentContainerStyle={styles.messagesContainer}
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}
+              >
+                {/* ...messages... */}
+              </ScrollView>
+
+              {/* Input */}
+              <View style={styles.inputContainer}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Nhập tin nhắn..."
+                  placeholderTextColor="#9CA3AF"
+                  value={input}
+                  onChangeText={setInput}
+                  onSubmitEditing={handleSend}
+                  multiline
+                  blurOnSubmit={false}
+                />
+                <TouchableOpacity
+                  onPress={handleSend}
+                  style={[
+                    styles.sendButton,
+                    !input.trim() && styles.disabledButton
+                  ]}
+                  disabled={!input.trim() || isTyping}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons
+                    name="send"
+                    size={20}
+                    color={input.trim() ? "#fff" : "#9CA3AF"}
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
+          </TouchableWithoutFeedback>
         </KeyboardAvoidingView>
       </View>
     </Animated.View>
   );
 }
 
+// Styles remain the same as in your original code
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -330,7 +364,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
     borderTopColor: '#E5E7EB',
-    marginBottom: 40,
   },
   input: {
     flex: 1,

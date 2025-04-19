@@ -7,252 +7,412 @@ import {
   TouchableOpacity,
   Image,
   TextInput,
+  SafeAreaView,
+  Platform,
+  Animated,
+  StatusBar
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import * as Haptics from 'expo-haptics';
+import { LinearGradient } from 'expo-linear-gradient';
 
-// Dữ liệu mẫu
-const studentData = Array(6).fill({
+// Sample data with more realistic information
+const studentData = Array.from({ length: 6 }, (_, i) => ({
   id: Math.random().toString(),
-  name: 'Học Sinh',
-  dob: '02/06/2004',
-  gender: 'Nữ',
+  name: `Nguyễn Văn ${String.fromCharCode(65 + i)}`,
+  dob: `0${i + 1}/06/2004`,
+  gender: i % 2 === 0 ? 'Nam' : 'Nữ',
   type: 'student',
-  email: 'hocsinh@example.com',
-  phone: '0123456789',
-  address: '123 Đường ABC, Quận 1, TP.HCM'
-});
+  email: `student${i + 1}@trancaovan.edu.vn`,
+  phone: `098765432${i}`,
+  address: `${i + 1}23 Đường ABC, Quận 1, TP.HCM`,
+  studentId: `STU2023${1000 + i}`
+}));
 
-const teacherData = Array(4).fill({
+const teacherData = Array.from({ length: 4 }, (_, i) => ({
   id: Math.random().toString(),
-  name: 'Giáo Viên',
-  dob: '15/03/1985',
-  gender: 'Nam',
+  name: `Giáo viên ${String.fromCharCode(65 + i)}`,
+  dob: `15/03/${1980 + i}`,
+  gender: i % 2 === 0 ? 'Nam' : 'Nữ',
   type: 'teacher',
-  email: 'giaovien@example.com',
-  phone: '0987654321',
-  address: '456 Đường XYZ, Quận 3, TP.HCM',
-  subject: 'Toán học',
-  yearsOfExperience: 10
-});
+  email: `teacher${i + 1}@trancaovan.edu.vn`,
+  phone: `098765432${i}`,
+  address: `${i + 1}56 Đường XYZ, Quận 3, TP.HCM`,
+  subject: ['Toán học', 'Ngữ văn', 'Vật lý', 'Hóa học'][i],
+  yearsOfExperience: 5 + i,
+  teacherId: `TCH2023${100 + i}`
+}));
 
 const Class = () => {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'student' | 'teacher'>('student');
   const [searchText, setSearchText] = useState('');
+  const fadeAnim = new Animated.Value(0);
+
+  React.useEffect(() => {
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+  }, []);
 
   const handleBackPress = () => {
+    Haptics.selectionAsync();
     router.push('/(tabs)/home');
   };
 
   const handleItemPress = (item: any) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     router.push({
       pathname: '/stack/detail-class',
       params: {
         ...item,
         ...(item.type === 'teacher' ? {
           subject: item.subject,
-          yearsOfExperience: item.yearsOfExperience
+          yearsOfExperience: item.yearsOfExperience.toString()
         } : {})
       }
     });
   };
 
-  // Sử dụng useMemo để tối ưu hiệu năng
+  const handleTabChange = (tab: 'student' | 'teacher') => {
+    Haptics.selectionAsync();
+    setActiveTab(tab);
+  };
+
   const filteredData = useMemo(() => {
     const data = activeTab === 'student' ? studentData : teacherData;
-    return data.filter(item => 
+    return data.filter(item =>
       item.name.toLowerCase().includes(searchText.toLowerCase()) ||
-      item.email.toLowerCase().includes(searchText.toLowerCase())
+      item.email.toLowerCase().includes(searchText.toLowerCase()) ||
+      (activeTab === 'student' && item.studentId.toLowerCase().includes(searchText.toLowerCase())) ||
+      (activeTab === 'teacher' && item.teacherId.toLowerCase().includes(searchText.toLowerCase()))
     );
   }, [activeTab, searchText]);
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={handleBackPress}>
-          <Ionicons name="arrow-back" size={24} color="white" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Lớp học của tôi</Text>
-      </View>
+    <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
+      <View style={styles.safeArea}>
+        {/* Header */}
+        <LinearGradient
+  colors={['#4A90E2', '#59CBE8']}
+  start={{ x: 0, y: 0 }}
+  end={{ x: 1, y: 0 }}
+  style={styles.header}
+>
+  <View style={styles.headerContent}>
+    <TouchableOpacity
+      onPress={handleBackPress}
+      style={styles.backButton}
+      hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
+    >
+      <Ionicons name="arrow-back" size={24} color="white" />
+    </TouchableOpacity>
 
-      {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <Ionicons name="search" size={20} color="#999" style={styles.searchIcon} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Tìm kiếm..."
-          value={searchText}
-          onChangeText={setSearchText}
-        />
-      </View>
+    <Text style={styles.headerTitle}>Lớp 12A1</Text>
 
-      {/* Tab Switch */}
-      <View style={styles.tabContainer}>
-        <TouchableOpacity
-          style={[
-            styles.tab,
-            activeTab === 'student' && styles.activeTab,
-          ]}
-          onPress={() => setActiveTab('student')}
-        >
-          <Text
+    {/* Để cân giữa tiêu đề nếu không có nút bên phải */}
+    <View style={{ width: 24 }} />
+  </View>
+</LinearGradient>
+
+        {/* Search Bar */}
+        <View style={styles.searchContainer}>
+          <Ionicons name="search" size={20} color="#9CA3AF" style={styles.searchIcon} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Tìm kiếm học sinh, giáo viên..."
+            placeholderTextColor="#9CA3AF"
+            value={searchText}
+            onChangeText={setSearchText}
+            returnKeyType="search"
+          />
+          {searchText.length > 0 && (
+            <TouchableOpacity
+              onPress={() => setSearchText('')}
+              style={styles.clearButton}
+            >
+              <Ionicons name="close-circle" size={18} color="#9CA3AF" />
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {/* Tab Switch */}
+        <View style={styles.tabContainer}>
+          <TouchableOpacity
             style={[
-              styles.tabText,
-              activeTab === 'student' && styles.activeTabText,
+              styles.tab,
+              activeTab === 'student' && styles.activeTab,
             ]}
+            onPress={() => handleTabChange('student')}
+            activeOpacity={0.7}
           >
-            Học sinh ({studentData.length})
-          </Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity
-          style={[
-            styles.tab,
-            activeTab === 'teacher' && styles.activeTab,
-          ]}
-          onPress={() => setActiveTab('teacher')}
-        >
-          <Text
-            style={[
-              styles.tabText,
-              activeTab === 'teacher' && styles.activeTabText,
-            ]}
-          >
-            Giáo viên ({teacherData.length})
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* List */}
-      <ScrollView contentContainerStyle={styles.listContainer}>
-        {filteredData.map((item, index) => (
-          <TouchableOpacity 
-            key={`${item.id}-${index}`} 
-            style={styles.card}
-            onPress={() => handleItemPress(item)}
-          >
-            <Image
-              source={require('../../assets/images/avatar.png')}
-              style={styles.avatar}
-            />
-            <View style={styles.info}>
-              <Text style={styles.name}>{item.name}</Text>
-              <Text style={styles.dob}>
-                {item.gender} | {item.dob}
-              </Text>
-              {activeTab === 'teacher' && (
-                <Text style={styles.subject}>{item.subject}</Text>
-              )}
-            </View>
-            <Ionicons name="chevron-forward" size={20} color="#999" />
+            <Text
+              style={[
+                styles.tabText,
+                activeTab === 'student' && styles.activeTabText,
+              ]}
+            >
+              Học sinh ({studentData.length})
+            </Text>
           </TouchableOpacity>
-        ))}
-      </ScrollView>
-    </View>
+
+          <TouchableOpacity
+            style={[
+              styles.tab,
+              activeTab === 'teacher' && styles.activeTab,
+            ]}
+            onPress={() => handleTabChange('teacher')}
+            activeOpacity={0.7}
+          >
+            <Text
+              style={[
+                styles.tabText,
+                activeTab === 'teacher' && styles.activeTabText,
+              ]}
+            >
+              Giáo viên ({teacherData.length})
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* List */}
+        <ScrollView
+          contentContainerStyle={styles.listContainer}
+          showsVerticalScrollIndicator={false}
+        >
+          {filteredData.length === 0 ? (
+            <View style={styles.emptyState}>
+              <MaterialIcons name="search-off" size={48} color="#D1D5DB" />
+              <Text style={styles.emptyText}>Không tìm thấy kết quả</Text>
+            </View>
+          ) : (
+            filteredData.map((item, index) => (
+              <TouchableOpacity
+                key={`${item.id}-${index}`}
+                style={styles.card}
+                onPress={() => handleItemPress(item)}
+                activeOpacity={0.7}
+              >
+                <Image
+                  source={require('../../assets/images/avatar.png')}
+                  style={styles.avatar}
+                />
+                <View style={styles.info}>
+                  <View style={styles.nameRow}>
+                    <Text style={styles.name} numberOfLines={1}>{item.name}</Text>
+                    {activeTab === 'student' && (
+                      <Text style={styles.idText}>{item.studentId}</Text>
+                    )}
+                    {activeTab === 'teacher' && (
+                      <Text style={styles.idText}>{item.teacherId}</Text>
+                    )}
+                  </View>
+                  <Text style={styles.detailText}>
+                    {item.gender} • {item.dob}
+                  </Text>
+                  {activeTab === 'teacher' && (
+                    <Text style={styles.subjectText}>
+                      {item.subject} • {item.yearsOfExperience} năm kinh nghiệm
+                    </Text>
+                  )}
+                  {activeTab === 'student' && (
+                    <Text style={styles.emailText} numberOfLines={1}>
+                      {item.email}
+                    </Text>
+                  )}
+                </View>
+                <Ionicons
+                  name="chevron-forward"
+                  size={20}
+                  color="#D1D5DB"
+                  style={styles.chevronIcon}
+                />
+              </TouchableOpacity>
+            ))
+          )}
+        </ScrollView>
+      </View>
+    </Animated.View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#F9FAFB',
+  },
+  safeArea: {
+    flex: 1,
   },
   header: {
-    backgroundColor: '#59CBE8',
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 50,
+    paddingBottom: 16,
+    paddingHorizontal: 16,
+    // borderBottomLeftRadius: 20,
+    // borderBottomRightRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  backButton: {
+    padding: 4,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+  },
+  headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingTop: 50,
-    paddingBottom: 16,
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: '600',
     color: '#fff',
-    textAlign: 'center',
-    marginRight: 110,
+    letterSpacing: 0.5,
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f0f0f0',
-    borderRadius: 10,
-    marginHorizontal: 16,
-    marginTop: 10,
-    paddingHorizontal: 10,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    marginHorizontal: 20,
+    marginVertical: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    shadowColor: '#000',
+    shadowOpacity: 0.03,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 1,
   },
   searchIcon: {
-    marginRight: 8,
+    marginRight: 10,
+  },
+  clearButton: {
+    padding: 4,
+    marginLeft: 8,
   },
   searchInput: {
     flex: 1,
-    height: 40,
     fontSize: 16,
+    color: '#111827',
+    paddingVertical: 0,
   },
   tabContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 16,
+    marginTop: 8,
+    marginHorizontal: 20,
+    backgroundColor: '#F3F4F6',
+    borderRadius: 10,
+    padding: 4,
   },
   tab: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    backgroundColor: '#EAEAEA',
+    flex: 1,
+    paddingVertical: 10,
     borderRadius: 8,
-    marginHorizontal: 5,
+    alignItems: 'center',
   },
   activeTab: {
-    backgroundColor: '#59CBE8',
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 2,
   },
   tabText: {
-    color: '#555',
-    fontWeight: '600',
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#6B7280',
   },
   activeTabText: {
-    color: '#fff',
+    color: '#59CBE8',
+    fontWeight: '600',
   },
   listContainer: {
-    padding: 16,
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 30,
   },
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F8F8F8',
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
-    padding: 12,
+    padding: 16,
     marginBottom: 12,
     shadowColor: '#000',
     shadowOpacity: 0.05,
-    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 6,
     elevation: 2,
   },
   avatar: {
-    width: 50,
-    height: 50,
+    width: 56,
+    height: 56,
     borderRadius: 12,
-    backgroundColor: '#ddd',
+    backgroundColor: '#E5E7EB',
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
   },
   info: {
     flex: 1,
-    marginLeft: 12,
+    marginLeft: 16,
+    marginRight: 8,
+  },
+  nameRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
   },
   name: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '600',
+    color: '#111827',
+    flex: 1,
+    marginRight: 8,
   },
-  dob: {
+  idText: {
+    fontSize: 12,
+    color: '#9CA3AF',
+    fontWeight: '500',
+  },
+  detailText: {
     fontSize: 13,
-    color: '#555',
-    marginTop: 2,
+    color: '#6B7280',
+    marginBottom: 4,
   },
-  subject: {
+  subjectText: {
     fontSize: 13,
     color: '#59CBE8',
-    marginTop: 2,
-    fontWeight: '600',
+    fontWeight: '500',
+  },
+  emailText: {
+    fontSize: 13,
+    color: '#6B7280',
+    fontStyle: 'italic',
+  },
+  chevronIcon: {
+    marginLeft: 8,
+  },
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#9CA3AF',
+    marginTop: 16,
   },
 });
 
