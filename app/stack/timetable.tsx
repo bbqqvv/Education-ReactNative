@@ -117,7 +117,7 @@ const Timetable = () => {
 
       {/* Header with Gradient */}
       <LinearGradient
-        colors={['#06b6d4', '#0891b2']}
+        colors={['#4A90E2', '#59CBE8']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         style={styles.header}
@@ -247,8 +247,8 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 50,
     paddingBottom: 16,
     paddingHorizontal: 16,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
+    // borderBottomLeftRadius: 20,
+    // borderBottomRightRadius: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,

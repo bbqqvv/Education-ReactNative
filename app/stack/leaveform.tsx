@@ -6,26 +6,86 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput,
+  KeyboardAvoidingView,
+  Platform,
+  Alert,
+  Image,
+  ActivityIndicator
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useRouter } from 'expo-router';
 
 const LeaveApplication = () => {
   const router = useRouter();
-  const [name, setName] = useState('');
-  const [startDate, setStartDate] = useState('27/01/2023');
-  const [endDate, setEndDate] = useState('27/01/2023');
-  const [reason, setReason] = useState('');
-  
+  const [formData, setFormData] = useState({
+    recipient: 'Giáo viên chủ nhiệm',
+    applicant: '',
+    startDate: new Date(),
+    endDate: new Date(),
+    reason: '',
+  });
+  const [showStartDatePicker, setShowStartDatePicker] = useState(false);
+  const [showEndDatePicker, setShowEndDatePicker] = useState(false);
+  const [uploadedImage, setUploadedImage] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+
   const handleBack = () => {
     router.back();
   };
 
+  const handleSubmit = () => {
+    if (!formData.applicant || !formData.reason) {
+      Alert.alert('Thiếu thông tin', 'Vui lòng điền đầy đủ thông tin bắt buộc');
+      return;
+    }
+
+    setIsLoading(true);
+    // Simulate API call
+    setTimeout(() => {
+      setIsLoading(false);
+      Alert.alert('Thành công', 'Đơn xin nghỉ của bạn đã được gửi');
+      router.back();
+    }, 1500);
+  };
+
+  const formatDate = (date) => {
+    return date.toLocaleDateString('vi-VN');
+  };
+
+  const onDateChange = (event, selectedDate, field) => {
+    const currentDate = selectedDate || formData[field];
+    setFormData({ ...formData, [field]: currentDate });
+    if (field === 'startDate') setShowStartDatePicker(false);
+    if (field === 'endDate') setShowEndDatePicker(false);
+  };
+
+  const pickImage = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      setUploadedImage(result.assets[0].uri);
+    }
+  };
+
+  const removeImage = () => {
+    setUploadedImage(null);
+  };
+
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.container}
+    >
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={handleBack}>
+        <TouchableOpacity onPress={handleBack} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="white" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Đơn xin nghỉ</Text>
@@ -33,211 +93,362 @@ const LeaveApplication = () => {
       </View>
 
       {/* Form */}
-      <ScrollView contentContainerStyle={styles.formContainer}>
+      <ScrollView
+        contentContainerStyle={styles.formContainer}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
         {/* Recipient */}
         <View style={styles.section}>
-          <Text style={styles.label}>Kính gửi:</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Giáo viên chủ nhiệm"
-            value={name}
-            onChangeText={setName}
-          />
+          <Text style={styles.label}>Kính gửi: <Text style={styles.required}>*</Text></Text>
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={styles.input}
+              placeholder="Giáo viên chủ nhiệm"
+              placeholderTextColor="#999"
+              value={formData.recipient}
+              onChangeText={(text) => setFormData({ ...formData, recipient: text })}
+            />
+          </View>
         </View>
 
         {/* Applicant */}
         <View style={styles.section}>
-          <Text style={styles.label}>Người làm đơn:</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Nhập họ và tên"
-            value={name}
-            onChangeText={setName}
-          />
-        </View>
-
-        <View style={styles.divider} />
-
-        {/* Leave Period */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Thời gian nghỉ:</Text>
-          <View style={styles.dateContainer}>
+          <Text style={styles.label}>Người làm đơn: <Text style={styles.required}>*</Text></Text>
+          <View style={styles.inputContainer}>
             <TextInput
-              style={[styles.input, styles.dateInput1]}
-              value={startDate}
-              onChangeText={setStartDate}
-            />
-            <Text style={styles.toText}>Đến:</Text>
-            <TextInput
-              style={[styles.input, styles.dateInput2]}
-              value={endDate}
-              onChangeText={setEndDate}
+              style={styles.input}
+              placeholder="Nhập họ và tên"
+              placeholderTextColor="#999"
+              value={formData.applicant}
+              onChangeText={(text) => setFormData({ ...formData, applicant: text })}
             />
           </View>
         </View>
 
         <View style={styles.divider} />
 
+        {/* Leave Period */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Thời gian nghỉ: <Text style={styles.required}>*</Text></Text>
+          <View style={styles.dateContainer}>
+            <TouchableOpacity
+              style={[styles.input, styles.dateInput]}
+              onPress={() => setShowStartDatePicker(true)}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.dateText}>{formatDate(formData.startDate)}</Text>
+              <MaterialIcons name="date-range" size={20} color="#59CBE8" />
+            </TouchableOpacity>
+
+            <Text style={styles.toText}>đến</Text>
+
+            <TouchableOpacity
+              style={[styles.input, styles.dateInput]}
+              onPress={() => setShowEndDatePicker(true)}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.dateText}>{formatDate(formData.endDate)}</Text>
+              <MaterialIcons name="date-range" size={20} color="#59CBE8" />
+            </TouchableOpacity>
+          </View>
+
+          {showStartDatePicker && (
+            <DateTimePicker
+              value={formData.startDate}
+              mode="date"
+              display="spinner"
+              onChange={(event, date) => onDateChange(event, date, 'startDate')}
+            />
+          )}
+
+          {showEndDatePicker && (
+            <DateTimePicker
+              value={formData.endDate}
+              mode="date"
+              display="spinner"
+              onChange={(event, date) => onDateChange(event, date, 'endDate')}
+              minimumDate={formData.startDate}
+            />
+          )}
+        </View>
+
+        <View style={styles.divider} />
+
         {/* Reason */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Lý do nghỉ:</Text>
-          <TextInput
-            style={[styles.input, styles.multilineInput]}
-            placeholder="Nhập lý do nghỉ"
-            value={reason}
-            onChangeText={setReason}
-            multiline
-          />
+          <Text style={styles.sectionTitle}>Lý do nghỉ: <Text style={styles.required}>*</Text></Text>
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={[styles.input, styles.multilineInput]}
+              placeholder="Nhập lý do nghỉ"
+              placeholderTextColor="#999"
+              value={formData.reason}
+              onChangeText={(text) => setFormData({ ...formData, reason: text })}
+              multiline
+              numberOfLines={4}
+            />
+          </View>
         </View>
 
         <View style={styles.divider} />
 
         {/* Evidence */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Bằng chứng nếu có</Text>
-          <TouchableOpacity style={styles.uploadPlaceholder}>
-            <Ionicons name="cloud-upload-outline" size={40} color="#59CBE8" />
-            <Text style={styles.uploadText}>Tải lên bằng chứng</Text>
-          </TouchableOpacity>
+          <Text style={styles.sectionTitle}>Bằng chứng (nếu có)</Text>
+          {uploadedImage ? (
+            <View style={styles.imagePreviewContainer}>
+              <Image source={{ uri: uploadedImage }} style={styles.uploadedImage} />
+              <TouchableOpacity style={styles.removeImageButton} onPress={removeImage}>
+                <Ionicons name="close" size={20} color="white" />
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <TouchableOpacity
+              style={styles.uploadPlaceholder}
+              onPress={pickImage}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="cloud-upload-outline" size={40} color="#59CBE8" />
+              <Text style={styles.uploadText}>Tải lên bằng chứng</Text>
+              <Text style={styles.uploadHint}>Hỗ trợ: JPG, PNG (tối đa 5MB)</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Buttons Row */}
         <View style={styles.buttonsRow}>
-          <TouchableOpacity style={styles.previewButton}>
+          <TouchableOpacity
+            style={styles.previewButton}
+            onPress={() => Alert.alert('Chức năng xem trước', 'Đang phát triển')}
+            activeOpacity={0.7}
+          >
             <Text style={styles.previewButtonText}>Xem trước</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.submitButton}>
-            <Text style={styles.submitButtonText}>Xác nhận</Text>
+          <TouchableOpacity
+            style={styles.submitButton}
+            onPress={handleSubmit}
+            activeOpacity={0.7}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <Text style={styles.submitButtonText}>Gửi đơn</Text>
+            )}
           </TouchableOpacity>
         </View>
+
+        <View style={styles.footerNote}>
+          <Text style={styles.noteText}>Vui lòng kiểm tra kỹ thông tin trước khi gửi</Text>
+        </View>
       </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#f5f7fa',
   },
   header: {
     backgroundColor: '#59CBE8',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingTop: 50,
     paddingBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+    zIndex: 10,
+  },
+  backButton: {
+    padding: 8,
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#fff',
+    fontSize: 20,
+    fontWeight: '700',
+    color: 'white',
+    textAlign: 'center',
   },
   formContainer: {
-    padding: 16,
-    paddingBottom: 24,
+    padding: 20,
+    paddingBottom: 40,
   },
   section: {
-    marginBottom: 16,
+    marginBottom: 24,
   },
   label: {
     fontSize: 16,
-    color: '#555',
-    marginBottom: 4,
+    color: '#444',
+    marginBottom: 8,
+    fontWeight: '600',
   },
-  value: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#000',
+  required: {
+    color: '#FF3B30',
+  },
+  inputContainer: {
+    borderRadius: 12,
+    backgroundColor: 'white',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
   },
   input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 12,
+    padding: 16,
     fontSize: 16,
-    backgroundColor: '#fff',
+    color: '#333',
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 8,
+    fontSize: 17,
+    fontWeight: '700',
+    marginBottom: 12,
+    color: '#333',
   },
   dateContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
   },
-  dateInput1: {
-    width: 130,
-    marginRight: 20,
-    textAlign: 'center',
+  dateInput: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    height: 52,
+    paddingHorizontal: 16,
+    backgroundColor: 'white',
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
   },
-  dateInput2: {
-    width: 130,
-    marginLeft: 20,
-    textAlign: 'center',
+  dateText: {
+    fontSize: 16,
+    color: '#333',
   },
   toText: {
-    marginHorizontal: 8,
+    marginHorizontal: 12,
     fontSize: 16,
-    fontWeight: 'bold',
+    color: '#666',
+    fontWeight: '500',
   },
   multilineInput: {
-    minHeight: 100,
+    minHeight: 120,
     textAlignVertical: 'top',
   },
   divider: {
     height: 1,
-    backgroundColor: '#eee',
-    marginVertical: 16,
+    backgroundColor: '#eaeaea',
+    marginVertical: 20,
   },
   uploadPlaceholder: {
-    borderWidth: 1,
+    borderWidth: 2,
     borderColor: '#59CBE8',
     borderStyle: 'dashed',
-    borderRadius: 8,
-    padding: 20,
+    borderRadius: 12,
+    padding: 24,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: '#f8fcff',
   },
   uploadText: {
-    marginTop: 8,
+    marginTop: 12,
     color: '#59CBE8',
     fontSize: 16,
+    fontWeight: '600',
+  },
+  uploadHint: {
+    marginTop: 6,
+    color: '#888',
+    fontSize: 13,
+  },
+  imagePreviewContainer: {
+    position: 'relative',
+    borderRadius: 12,
+    overflow: 'hidden',
+    height: 200,
+    marginTop: 8,
+  },
+  uploadedImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  removeImageButton: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderRadius: 20,
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   buttonsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 24,
+    marginTop: 28,
   },
   previewButton: {
-    backgroundColor: '#F8F8F8',
-    paddingVertical: 12,
+    backgroundColor: '#f1f1f1',
+    paddingVertical: 16,
     paddingHorizontal: 24,
-    borderRadius: 8,
+    borderRadius: 12,
     flex: 1,
-    marginRight: 8,
+    marginRight: 12,
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   submitButton: {
     backgroundColor: '#59CBE8',
-    paddingVertical: 12,
+    paddingVertical: 16,
     paddingHorizontal: 24,
-    borderRadius: 8,
+    borderRadius: 12,
     flex: 1,
-    marginLeft: 8,
+    marginLeft: 12,
     alignItems: 'center',
+    shadowColor: '#59CBE8',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 5,
   },
   previewButtonText: {
     color: '#555',
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '700',
   },
   submitButtonText: {
-    color: '#fff',
+    color: 'white',
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '700',
+  },
+  footerNote: {
+    marginTop: 24,
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  noteText: {
+    color: '#888',
+    fontSize: 13,
+    fontStyle: 'italic',
+    textAlign: 'center',
+    lineHeight: 20,
   },
 });
 
