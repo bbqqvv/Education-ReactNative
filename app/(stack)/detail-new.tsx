@@ -9,67 +9,44 @@ import {
   TouchableOpacity,
   Share,
   Linking,
+  useWindowDimensions,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useNewsletter } from '../hooks/useNewsletter';
-import { MaterialIcons, FontAwesome, Feather, Ionicons } from '@expo/vector-icons';
-import RenderHtml from 'react-native-render-html';
-import { useWindowDimensions } from 'react-native';
-import * as Haptics from 'expo-haptics';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNewsletter } from '../hooks/useNewsletter';
+import * as Haptics from 'expo-haptics';
+import RenderHtml from 'react-native-render-html';
+import { format } from 'date-fns';
 
 const NewsDetailScreen = () => {
   const params = useLocalSearchParams();
   const router = useRouter();
   const { width } = useWindowDimensions();
   const { id } = params;
-  const { newsletter, loading, error } = useNewsletter(id as string);
-  const [liked, setLiked] = useState(false);
-  const [likeCount, setLikeCount] = useState(0);
-  const [bookmarked, setBookmarked] = useState(false);
-
-  useEffect(() => {
-    if (newsletter) {
-      setLikeCount(newsletter.likeCount || 0);
-    }
-  }, [newsletter]);
-
-  const handleLike = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setLiked(!liked);
-    setLikeCount(liked ? likeCount - 1 : likeCount + 1);
-    // TODO: Call API to update like
-  };
-
-  const handleBookmark = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setBookmarked(!bookmarked);
-    // TODO: Call API to update bookmark status
-  };
+  const { newsletter, loading, error, liked, likeCount, handleLike } = useNewsletter(id as string);
 
   const handleShare = async () => {
     try {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       await Share.share({
         title: newsletter?.title,
-        message: `Check out this article: ${newsletter?.title}\n\n${newsletter?.excerpt || 'Interesting read'}`,
+        message: `${newsletter?.title}\n\n${newsletter?.excerpt || 'Read this interesting article'}`,
       });
     } catch (error) {
       console.error('Error sharing:', error);
     }
   };
 
-  const openImageGallery = (index: number) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    // TODO: Implement image gallery viewer
-    console.log('Open image at index:', index);
+  const openImage = (url: string) => {
+    Linking.openURL(url).catch(err => console.error("Couldn't load page", err));
   };
 
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#4E83FF" />
-        <Text style={styles.loadingText}>Loading article details...</Text>
+        <Text style={styles.loadingText}>Loading article...</Text>
       </View>
     );
   }
@@ -112,35 +89,32 @@ const NewsDetailScreen = () => {
           )}
 
           <View style={styles.metaContainer}>
-            <View style={styles.authorContainer}>
-              <FontAwesome name="user-circle" size={16} color="#64748B" />
-              <Text style={styles.metaText}>{newsletter?.author || 'Unknown Author'}</Text>
+            <View style={styles.metaItem}>
+              <Ionicons name="person-outline" size={16} color="#64748B" />
+              <Text style={styles.metaText}>{newsletter?.author || 'System'}</Text>
             </View>
 
-            <View style={styles.spacer} />
-
-            <View style={styles.dateContainer}>
-              <Feather name="calendar" size={14} color="#64748B" />
+            <View style={styles.metaItem}>
+              <Ionicons name="calendar-outline" size={16} color="#64748B" />
               <Text style={styles.metaText}>
-                {newsletter?.createdAt ? new Date(newsletter.createdAt).toLocaleDateString('en-US', {
-                  year: 'numeric',
-                  month: 'short',
-                  day: 'numeric'
-                }) : 'N/A'}
+                {newsletter?.createdAt
+                  ? format(new Date(newsletter.createdAt), 'MMM d, yyyy')
+                  : 'N/A'}
               </Text>
+            </View>
+
+            <View style={styles.metaItem}>
+              <Ionicons name="eye-outline" size={16} color="#64748B" />
+              <Text style={styles.metaText}>{newsletter?.viewCount || 0}</Text>
             </View>
           </View>
 
           {newsletter?.tags && newsletter.tags.length > 0 && (
             <View style={styles.tagsContainer}>
               {newsletter.tags.map((tag, index) => (
-                <TouchableOpacity
-                  key={index}
-                  style={styles.tag}
-                  activeOpacity={0.7}
-                >
+                <View key={index} style={styles.tag}>
                   <Text style={styles.tagText}>#{tag}</Text>
-                </TouchableOpacity>
+                </View>
               ))}
             </View>
           )}
@@ -151,51 +125,14 @@ const NewsDetailScreen = () => {
                 contentWidth={width - 40}
                 source={{ html: newsletter.content }}
                 tagsStyles={{
-                  p: {
-                    fontSize: 16,
-                    lineHeight: 26,
-                    color: '#334155',
-                    marginBottom: 16,
-                    fontFamily: 'System'
-                  },
-                  h1: {
-                    fontSize: 24,
-                    fontWeight: '700',
-                    marginVertical: 20,
-                    color: '#1E293B',
-                    lineHeight: 32
-                  },
-                  h2: {
-                    fontSize: 20,
-                    fontWeight: '600',
-                    marginVertical: 18,
-                    color: '#1E293B',
-                    lineHeight: 28
-                  },
-                  h3: {
-                    fontSize: 18,
-                    fontWeight: '600',
-                    marginVertical: 16,
-                    color: '#1E293B',
-                    lineHeight: 26
-                  },
-                  a: {
-                    color: '#4E83FF',
-                    textDecorationLine: 'none'
-                  },
-                  ul: {
-                    marginBottom: 16
-                  },
-                  li: {
-                    fontSize: 16,
-                    lineHeight: 24,
-                    color: '#334155',
-                    marginBottom: 8
-                  }
-                }}
-                baseStyle={{
-                  fontSize: 16,
-                  color: '#334155',
+                  p: { fontSize: 16, lineHeight: 24, color: '#334155', marginBottom: 16 },
+                  h1: { fontSize: 24, fontWeight: '700', marginVertical: 20, color: '#1E293B' },
+                  h2: { fontSize: 20, fontWeight: '600', marginVertical: 18, color: '#1E293B' },
+                  h3: { fontSize: 18, fontWeight: '600', marginVertical: 16, color: '#1E293B' },
+                  a: { color: '#4E83FF', textDecorationLine: 'none' },
+                  ul: { marginBottom: 16 },
+                  li: { fontSize: 16, color: '#334155', marginBottom: 8 },
+                  img: { maxWidth: width - 40, borderRadius: 8, marginVertical: 16 }
                 }}
               />
             </View>
@@ -203,17 +140,16 @@ const NewsDetailScreen = () => {
 
           {newsletter?.contentImages && newsletter.contentImages.length > 0 && (
             <View style={styles.imageGallery}>
-              <Text style={styles.sectionTitle}>Ảnh liên quan</Text>
+              <Text style={styles.sectionTitle}>Related Images</Text>
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.galleryScrollContainer}
+                contentContainerStyle={styles.galleryScroll}
               >
                 {newsletter.contentImages.map((img, index) => (
                   <TouchableOpacity
                     key={index}
-                    onPress={() => openImageGallery(index)}
-                    style={styles.galleryImageWrapper}
+                    onPress={() => openImage(img)}
                     activeOpacity={0.8}
                   >
                     <Image
@@ -232,48 +168,32 @@ const NewsDetailScreen = () => {
       <View style={styles.actionBar}>
         <TouchableOpacity
           style={styles.actionButton}
-          onPress={() => router.back()}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="chevron-back" size={24} color="#4E83FF" />
-        </TouchableOpacity>
-
-        <View style={styles.centerActions}>
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={handleLike}
-            activeOpacity={0.7}
-          >
-            <Ionicons
-              name={liked ? "heart" : "heart-outline"}
-              size={24}
-              color={liked ? "#FF4E4E" : "#64748B"}
-            />
-            <Text style={[styles.actionText, liked && styles.likedText]}>
-              {likeCount}
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={handleShare}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="share-social-outline" size={22} color="#64748B" />
-            <Text style={styles.actionText}>Share</Text>
-          </TouchableOpacity>
-        </View>
-
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={handleBookmark}
+          onPress={handleLike}
           activeOpacity={0.7}
         >
           <Ionicons
-            name={bookmarked ? "bookmark" : "bookmark-outline"}
-            size={22}
-            color={bookmarked ? "#4E83FF" : "#64748B"}
+            name={liked ? 'heart' : 'heart-outline'}
+            size={24}
+            color={liked ? '#FF4E4E' : '#64748B'}
           />
+          <Text style={[styles.actionText, liked && styles.likedText]}>{likeCount}</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={handleShare}
+          activeOpacity={0.7}
+        >
+          <MaterialIcons name="share" size={24} color="#64748B" />
+          <Text style={styles.actionText}>Share</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={() => router.back()}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="arrow-back" size={24} color="#4E83FF" />
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -299,7 +219,6 @@ const styles = StyleSheet.create({
     marginTop: 16,
     color: '#64748B',
     fontSize: 16,
-    fontFamily: 'System',
     fontWeight: '500',
   },
   errorContainer: {
@@ -314,9 +233,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginVertical: 16,
     textAlign: 'center',
-    fontFamily: 'System',
     fontWeight: '500',
-    lineHeight: 24,
   },
   backButton: {
     paddingHorizontal: 20,
@@ -328,7 +245,6 @@ const styles = StyleSheet.create({
     color: '#4E83FF',
     fontWeight: '600',
     fontSize: 16,
-    fontFamily: 'System',
   },
   image: {
     width: '100%',
@@ -346,33 +262,21 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#1E293B',
     marginBottom: 12,
-    lineHeight: 36,
-    fontFamily: 'System',
+    lineHeight: 34,
   },
   excerpt: {
     fontSize: 16,
     color: '#64748B',
     marginBottom: 20,
     lineHeight: 24,
-    fontFamily: 'System',
-    fontStyle: 'italic',
   },
   metaContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
     flexWrap: 'wrap',
+    marginBottom: 20,
+    gap: 16,
   },
-  authorContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  spacer: {
-    width: 16,
-    height: 1,
-  },
-  dateContainer: {
+  metaItem: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
@@ -380,25 +284,23 @@ const styles = StyleSheet.create({
   metaText: {
     fontSize: 14,
     color: '#64748B',
-    fontFamily: 'System',
   },
   tagsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
-    marginBottom: 24,
+    marginBottom: 20,
   },
   tag: {
     paddingHorizontal: 12,
     paddingVertical: 6,
     backgroundColor: '#F1F5F9',
-    borderRadius: 20,
+    borderRadius: 16,
   },
   tagText: {
-    fontSize: 13,
+    fontSize: 12,
     color: '#4E83FF',
     fontWeight: '500',
-    fontFamily: 'System',
   },
   htmlContent: {
     marginBottom: 24,
@@ -406,29 +308,20 @@ const styles = StyleSheet.create({
   imageGallery: {
     marginBottom: 24,
   },
-  galleryScrollContainer: {
-    paddingRight: 20,
-  },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
     color: '#1E293B',
-    marginBottom: 16,
-    fontFamily: 'System',
+    marginBottom: 12,
   },
-  galleryImageWrapper: {
-    marginRight: 12,
-    borderRadius: 12,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+  galleryScroll: {
+    paddingRight: 20,
   },
   galleryImage: {
     width: 180,
-    height: 140,
+    height: 120,
+    borderRadius: 8,
+    marginRight: 12,
   },
   actionBar: {
     position: 'absolute',
@@ -449,10 +342,6 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 5,
   },
-  centerActions: {
-    flexDirection: 'row',
-    gap: 24,
-  },
   actionButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -463,7 +352,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#64748B',
     fontWeight: '500',
-    fontFamily: 'System',
   },
   likedText: {
     color: '#FF4E4E',

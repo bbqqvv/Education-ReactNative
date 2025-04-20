@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { NewsletterResponse } from '../api/newsletter/newsletter.type';
 import { NewsletterApi } from '../api/newsletter/newsletter.service';
+import * as Haptics from 'expo-haptics';
 
 export const useNewsletter = (id?: string) => {
   const [newsletters, setNewsletters] = useState<NewsletterResponse[]>([]);
@@ -8,6 +9,8 @@ export const useNewsletter = (id?: string) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState<boolean>(false);
+  const [liked, setLiked] = useState<boolean>(false);
+  const [likeCount, setLikeCount] = useState<number>(0);
 
   const fetchNewsletters = async () => {
     try {
@@ -26,7 +29,9 @@ export const useNewsletter = (id?: string) => {
     try {
       setLoading(true);
       const response = await NewsletterApi.getNewsletterById(newsletterId);
-      setNewsletter(response.data || null);
+      const data = response.data || null;
+      setNewsletter(data);
+      setLikeCount(data?.likeCount ?? 0); // Khởi tạo số lượng like
       setError(null);
     } catch (err: any) {
       setError(err.message || 'Không thể lấy chi tiết bản tin');
@@ -45,6 +50,16 @@ export const useNewsletter = (id?: string) => {
       setError(err.message || 'Không thể làm mới danh sách bản tin');
     } finally {
       setRefreshing(false);
+    }
+  };
+
+  const handleLike = async () => {
+    try {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      const response = await NewsletterApi.likeNewsletter(id as string);
+      setLikeCount(response.data?.totalLikes ?? 0); // Cập nhật số lượng like
+    } catch (error) {
+      console.error('Error liking newsletter:', error);
     }
   };
 
@@ -69,5 +84,8 @@ export const useNewsletter = (id?: string) => {
     error,
     refreshing,
     refreshNewsletters,
+    liked,
+    likeCount,
+    handleLike,
   };
 };

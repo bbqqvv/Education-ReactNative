@@ -13,7 +13,6 @@ import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as LocalAuthentication from "expo-local-authentication";
 import AsyncStorage from "@react-native-async-storage/async-storage"; // Import AsyncStorage cho mobile
-import { Platform } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/app/store/store";
 import { fetchUserInfo, loginUser } from "@/app/store/slices/authSlice";

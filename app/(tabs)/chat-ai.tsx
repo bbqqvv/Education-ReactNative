@@ -10,11 +10,14 @@ import {
   Platform,
   Image,
   Animated,
+  Dimensions,
+  TouchableWithoutFeedback,
+  Keyboard,
+  ActivityIndicator
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useChatAi } from '../hooks/useChatAI';
-import { Keyboard, TouchableWithoutFeedback } from 'react-native';
 
 interface ChatMessage {
   text: string;
@@ -22,14 +25,17 @@ interface ChatMessage {
   timestamp: string;
 }
 
+const { width } = Dimensions.get('window');
+
 export default function ChatAi() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
+  const [inputHeight, setInputHeight] = useState(48);
   const scrollViewRef = useRef<ScrollView>(null);
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const inputRef = useRef<TextInput>(null);
 
-  // Use the custom hook
-  const { chatWithAi, loading: isTyping, error, reset } = useChatAi();
+  const { chatWithAi, loading: isTyping, error } = useChatAi();
 
   const getTimeString = () => {
     const now = new Date();
@@ -45,7 +51,7 @@ export default function ChatAi() {
   }, []);
 
   const handleSend = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() || isTyping) return;
 
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     const userMessage = {
@@ -55,19 +61,18 @@ export default function ChatAi() {
     };
     setMessages(prev => [...prev, userMessage]);
     setInput('');
+    setInputHeight(48); // Reset input height after send
+    Keyboard.dismiss();
 
     try {
-      // Call the API using the custom hook
       const response = await chatWithAi({ message: input });
-
       const aiMessage = {
-        text: response.reply, // Assuming the response has a 'message' property
+        text: response.reply,
         isUser: false,
         timestamp: getTimeString(),
       };
       setMessages(prev => [...prev, aiMessage]);
     } catch (err) {
-      // Handle error (the hook already sets the error state)
       const errorMessage = {
         text: 'Xin lỗi, có lỗi xảy ra. Vui lòng thử lại sau.',
         isUser: false,
@@ -77,235 +82,310 @@ export default function ChatAi() {
     }
   };
 
+  const handleInputSizeChange = (event: any) => {
+    const { contentSize } = event.nativeEvent;
+    setInputHeight(Math.min(Math.max(contentSize.height, 48), 120));
+  };
+
   useEffect(() => {
-    if (scrollViewRef.current) {
-      scrollViewRef.current.scrollToEnd({ animated: true });
+    if (messages.length > 0 && scrollViewRef.current) {
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 100);
     }
   }, [messages, isTyping]);
 
-  useEffect(() => {
-    if (error) {
-      // You can show an alert or handle the error in another way
-      console.error('Chat error:', error);
-    }
-  }, [error]);
+  const clearChat = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setMessages([]);
+  };
 
   return (
     <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
-      <View style={styles.safeArea}>
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity style={styles.backButton}>
-            <Ionicons name="chevron-back" size={24} color="#fff" />
-          </TouchableOpacity>
-          <View style={styles.headerContent}>
-            <Image
-              source={require('@/assets/images/ai-avatar.png')}
-              style={styles.headerAvatar}
-            />
-            <Text style={styles.headerText}>Trợ lý AI</Text>
-          </View>
-          <View style={{ width: 40 }} />
+      {/* Header */}
+      <View style={styles.header}>
+        <View style={styles.headerContent}>
+          <Image
+            source={require('@/assets/images/ai-avatar.png')}
+            style={styles.headerAvatar}
+          />
+          <Text style={styles.headerText}>Trợ lý AI</Text>
         </View>
-
-        {/* Chat Content */}
-        <ScrollView
-          ref={scrollViewRef}
-          style={styles.chatContainer}
-          contentContainerStyle={styles.messagesContainer}
-          showsVerticalScrollIndicator={false}
-          keyboardDismissMode="interactive"
+        <TouchableOpacity
+          onPress={clearChat}
+          style={styles.clearButton}
+          disabled={messages.length === 0}
         >
-          {messages.length === 0 && (
-            <View style={styles.welcomeContainer}>
-              <Image
-                source={require('@/assets/images/ai-welcome.png')}
-                style={styles.welcomeImage}
-              />
-              <Text style={styles.welcomeTitle}>Xin chào! Tôi có thể giúp gì cho bạn?</Text>
-              <Text style={styles.welcomeSubtitle}>Hỏi tôi bất cứ điều gì về Trường THPT Trần Cao Vân</Text>
-            </View>
-          )}
-
-          {messages.map((msg, index) => (
-            <View
-              key={index}
-              style={[
-                styles.messageRow,
-                msg.isUser ? styles.userRow : styles.aiRow,
-              ]}
+          <MaterialIcons
+            name="delete-outline"
+            size={24}
+            color={messages.length === 0 ? '#CBD5E0' : '#64748B'}
+          />
+        </TouchableOpacity>
+      </View>
+      {/* Chat Content */}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'position'}
+        style={styles.keyboardAvoidView}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View style={{ flex: 1 }}>
+            <ScrollView
+              ref={scrollViewRef}
+              style={styles.chatContainer}
+              contentContainerStyle={styles.messagesContainer}
+              keyboardDismissMode="interactive"
+              showsVerticalScrollIndicator={false}
             >
-              {!msg.isUser && (
-                <Image
-                  source={require('@/assets/images/ai-avatar.png')}
-                  style={styles.avatar}
-                />
-              )}
-              <View
-                style={[
-                  styles.messageBubble,
-                  msg.isUser ? styles.userBubble : styles.aiBubble,
-                ]}
-              >
-                <Text style={msg.isUser ? styles.userText : styles.aiText}>{msg.text}</Text>
-                <Text style={[
-                  styles.timestamp,
-                  msg.isUser ? styles.userTimestamp : styles.aiTimestamp
-                ]}>
-                  {msg.timestamp}
-                </Text>
-              </View>
-            </View>
-          ))}
-
-          {isTyping && (
-            <View style={[styles.messageRow, styles.aiRow]}>
-              <Image
-                source={require('@/assets/images/ai-avatar.png')}
-                style={styles.avatar}
-              />
-              <View style={[styles.messageBubble, styles.aiBubble]}>
-                <View style={styles.typingIndicator}>
-                  <View style={styles.typingDot} />
-                  <View style={styles.typingDot} />
-                  <View style={styles.typingDot} />
+              {messages.length === 0 ? (
+                <View style={styles.welcomeContainer}>
+                  <Image
+                    source={require('@/assets/images/ai-welcome.png')}
+                    style={styles.welcomeImage}
+                  />
+                  <Text style={styles.welcomeTitle}>Xin chào! Tôi có thể giúp gì cho bạn?</Text>
+                  <Text style={styles.welcomeSubtitle}>
+                    Hỏi tôi bất cứ điều gì về trường học, lịch trình hoặc thông tin khác
+                  </Text>
+                  <View style={styles.suggestionContainer}>
+                    <Text style={styles.suggestionTitle}>Gợi ý:</Text>
+                    <View style={styles.suggestionChips}>
+                      <TouchableOpacity
+                        style={styles.chip}
+                        onPress={() => {
+                          setInput('Lịch thi học kỳ này như thế nào?');
+                          inputRef.current?.focus();
+                        }}
+                      >
+                        <Text style={styles.chipText}>Lịch thi học kỳ này?</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.chip}
+                        onPress={() => {
+                          setInput('Thời khóa biểu của tôi?');
+                          inputRef.current?.focus();
+                        }}
+                      >
+                        <Text style={styles.chipText}>Thời khóa biểu của tôi?</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
                 </View>
-              </View>
-            </View>
-          )}
-        </ScrollView>
-        <KeyboardAvoidingView
-          style={{ flex: 1 }}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          keyboardVerticalOffset={Platform.OS === 'ios' ? 40 : 0} // Giảm offset
-        >
-          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-            <View style={styles.safeArea}>
-              {/* Header + ScrollView */}
-              <ScrollView
-                ref={scrollViewRef}
-                style={styles.chatContainer}
-                contentContainerStyle={styles.messagesContainer}
-                keyboardShouldPersistTaps="handled"
-                showsVerticalScrollIndicator={false}
-              >
-                {/* ...messages... */}
-              </ScrollView>
+              ) : (
+                messages.map((msg, index) => (
+                  <View
+                    key={index}
+                    style={[
+                      styles.messageRow,
+                      msg.isUser ? styles.userRow : styles.aiRow,
+                    ]}
+                  >
+                    {!msg.isUser && (
+                      <Image
+                        source={require('@/assets/images/ai-avatar.png')}
+                        style={styles.avatar}
+                      />
+                    )}
+                    <View
+                      style={[
+                        styles.messageBubble,
+                        msg.isUser ? styles.userBubble : styles.aiBubble,
+                      ]}
+                    >
+                      <Text style={msg.isUser ? styles.userText : styles.aiText}>
+                        {msg.text}
+                      </Text>
+                      <View style={styles.messageFooter}>
+                        <Text
+                          style={[
+                            styles.timestamp,
+                            msg.isUser ? styles.userTimestamp : styles.aiTimestamp,
+                          ]}
+                        >
+                          {msg.timestamp}
+                        </Text>
+                        {msg.isUser && (
+                          <Ionicons
+                            name="checkmark-done"
+                            size={14}
+                            color="#4FD1C5"
+                            style={styles.statusIcon}
+                          />
+                        )}
+                      </View>
+                    </View>
+                  </View>
+                ))
+              )}
 
-              {/* Input */}
-              <View style={styles.inputContainer}>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Nhập tin nhắn..."
-                  placeholderTextColor="#9CA3AF"
-                  value={input}
-                  onChangeText={setInput}
-                  onSubmitEditing={handleSend}
-                  multiline
-                  blurOnSubmit={false}
-                />
-                <TouchableOpacity
-                  onPress={handleSend}
-                  style={[
-                    styles.sendButton,
-                    !input.trim() && styles.disabledButton
-                  ]}
-                  disabled={!input.trim() || isTyping}
-                  activeOpacity={0.7}
-                >
+              {isTyping && (
+                <View style={[styles.messageRow, styles.aiRow]}>
+                  <Image
+                    source={require('@/assets/images/ai-avatar.png')}
+                    style={styles.avatar}
+                  />
+                  <View style={[styles.messageBubble, styles.aiBubble]}>
+                    <View style={styles.typingContainer}>
+                      <ActivityIndicator size="small" color="#64748B" />
+                      <Text style={styles.typingText}>Đang trả lời...</Text>
+                    </View>
+                  </View>
+                </View>
+              )}
+            </ScrollView>
+
+            {/* Input Area */}
+            <View style={styles.inputContainer}>
+              <TextInput
+                ref={inputRef}
+                style={[styles.input, { height: inputHeight }]}
+                placeholder="Nhập tin nhắn..."
+                placeholderTextColor="#94A3B8"
+                value={input}
+                onChangeText={setInput}
+                onSubmitEditing={handleSend}
+                multiline
+                blurOnSubmit={false}
+                onContentSizeChange={handleInputSizeChange}
+                returnKeyType="send"
+                enablesReturnKeyAutomatically
+              />
+              <TouchableOpacity
+                onPress={handleSend}
+                style={[
+                  styles.sendButton,
+                  (!input.trim() || isTyping) && styles.disabledButton,
+                ]}
+                disabled={!input.trim() || isTyping}
+                activeOpacity={0.8}
+              >
+                {isTyping ? (
+                  <ActivityIndicator size="small" color="#94A3B8" />
+                ) : (
                   <Ionicons
                     name="send"
                     size={20}
-                    color={input.trim() ? "#fff" : "#9CA3AF"}
+                    color={input.trim() ? '#FFFFFF' : '#94A3B8'}
                   />
-                </TouchableOpacity>
-              </View>
+                )}
+              </TouchableOpacity>
             </View>
-          </TouchableWithoutFeedback>
-        </KeyboardAvoidingView>
-      </View>
+          </View>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
+
     </Animated.View>
   );
 }
 
-// Styles remain the same as in your original code
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: '#F8FAFC',
   },
-  safeArea: {
+  keyboardAvoidView: {
     flex: 1,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: 'white',
+    paddingHorizontal: 20,
     paddingTop: Platform.OS === 'ios' ? 50 : 30,
-    paddingHorizontal: 16,
     paddingBottom: 16,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2E8F0',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.05,
     shadowRadius: 8,
-    elevation: 5,
+    elevation: 3,
     zIndex: 10,
-  },
-  backButton: {
-    padding: 4,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.2)',
   },
   headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   headerAvatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     marginRight: 12,
   },
   headerText: {
     fontSize: 18,
     fontWeight: '600',
-    color: 'black',
+    color: '#1E293B',
+  },
+  clearButton: {
+    padding: 6,
+    borderRadius: 12,
   },
   chatContainer: {
     flex: 1,
-    paddingHorizontal: 12,
+    paddingHorizontal: 16,
+    backgroundColor: '#F8FAFC',
   },
   messagesContainer: {
-    paddingVertical: 16,
-    paddingBottom: 80,
+    paddingTop: 16,
+    paddingBottom: 100,
   },
   welcomeContainer: {
     alignItems: 'center',
-    paddingVertical: 40,
+    paddingTop: 40,
     paddingHorizontal: 20,
   },
   welcomeImage: {
-    width: 120,
-    height: 120,
-    marginBottom: 20,
+    width: 140,
+    height: 140,
+    marginBottom: 24,
   },
   welcomeTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '600',
-    color: '#374151',
+    color: '#1E293B',
     marginBottom: 8,
     textAlign: 'center',
   },
   welcomeSubtitle: {
-    fontSize: 14,
-    color: '#6B7280',
+    fontSize: 15,
+    color: '#64748B',
     textAlign: 'center',
-    lineHeight: 20,
+    lineHeight: 22,
+    marginBottom: 32,
+  },
+  suggestionContainer: {
+    width: '100%',
+    marginTop: 16,
+  },
+  suggestionTitle: {
+    fontSize: 14,
+    color: '#64748B',
+    marginBottom: 12,
+    fontWeight: '500',
+  },
+  suggestionChips: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  chip: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    backgroundColor: '#EDF2F7',
+    borderRadius: 20,
+  },
+  chipText: {
+    fontSize: 14,
+    color: '#4A5568',
   },
   messageRow: {
     flexDirection: 'row',
-    marginBottom: 12,
+    marginBottom: 16,
+    alignItems: 'flex-start',
   },
   aiRow: {
     justifyContent: 'flex-start',
@@ -314,28 +394,28 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   messageBubble: {
-    maxWidth: '80%',
-    padding: 14,
-    borderRadius: 18,
+    maxWidth: width * 0.8,
+    padding: 16,
+    borderRadius: 20,
     shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
+    shadowOpacity: 0.03,
+    shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
+    elevation: 1,
   },
   aiBubble: {
     backgroundColor: '#FFFFFF',
     borderBottomLeftRadius: 4,
     marginLeft: 8,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: '#E2E8F0',
   },
   userBubble: {
-    backgroundColor: '#59CBE8',
+    backgroundColor: '#3B82F6',
     borderBottomRightRadius: 4,
   },
   aiText: {
-    color: '#111827',
+    color: '#1E293B',
     fontSize: 16,
     lineHeight: 24,
   },
@@ -344,17 +424,24 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 24,
   },
-  timestamp: {
-    fontSize: 11,
+  messageFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
     marginTop: 6,
   },
+  timestamp: {
+    fontSize: 12,
+    marginRight: 4,
+  },
   aiTimestamp: {
-    color: '#9CA3AF',
-    alignSelf: 'flex-start',
+    color: '#94A3B8',
   },
   userTimestamp: {
     color: 'rgba(255,255,255,0.7)',
-    alignSelf: 'flex-end',
+  },
+  statusIcon: {
+    marginLeft: 4,
   },
   inputContainer: {
     flexDirection: 'row',
@@ -363,29 +450,34 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
+    borderTopColor: '#E2E8F0',
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
   },
   input: {
     flex: 1,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: '#F1F5F9',
     borderRadius: 24,
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontSize: 16,
-    color: '#111827',
+    color: '#1E293B',
     marginRight: 12,
     maxHeight: 120,
+    textAlignVertical: 'center',
   },
   sendButton: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#59CBE8',
+    backgroundColor: '#3B82F6',
     justifyContent: 'center',
     alignItems: 'center',
   },
   disabledButton: {
-    backgroundColor: '#E5E7EB',
+    backgroundColor: '#E2E8F0',
   },
   avatar: {
     width: 36,
@@ -393,16 +485,14 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     marginRight: 8,
   },
-  typingIndicator: {
+  typingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 8,
   },
-  typingDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#9CA3AF',
-    marginHorizontal: 2,
+  typingText: {
+    marginLeft: 8,
+    color: '#64748B',
+    fontSize: 14,
   },
 });

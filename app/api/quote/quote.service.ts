@@ -8,7 +8,7 @@ export const QuoteApi = {
         return response.data;
     },
     async getRandomQuote(): Promise<QuoteResponse> {
-        const response = await apiClient.post(API_ENDPOINTS.QUOTE.GET_QUOTE);
+        const response = await apiClient.get(API_ENDPOINTS.QUOTE.GET_QUOTE);
         return response.data;
     },
 };
