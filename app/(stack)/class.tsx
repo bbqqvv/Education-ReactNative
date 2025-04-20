@@ -66,7 +66,7 @@ const Class = () => {
   const handleItemPress = (item: any) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     router.push({
-      pathname: '/stack/detail-class',
+      pathname: '/(stack)/detail-class',
       params: {
         ...item,
         ...(item.type === 'teacher' ? {
@@ -97,26 +97,26 @@ const Class = () => {
       <View style={styles.safeArea}>
         {/* Header */}
         <LinearGradient
-  colors={['#4A90E2', '#59CBE8']}
-  start={{ x: 0, y: 0 }}
-  end={{ x: 1, y: 0 }}
-  style={styles.header}
->
-  <View style={styles.headerContent}>
-    <TouchableOpacity
-      onPress={handleBackPress}
-      style={styles.backButton}
-      hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
-    >
-      <Ionicons name="arrow-back" size={24} color="white" />
-    </TouchableOpacity>
+          colors={['#4A90E2', '#59CBE8']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.header}
+        >
+          <View style={styles.headerContent}>
+            <TouchableOpacity
+              onPress={handleBackPress}
+              style={styles.backButton}
+              hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
+            >
+              <Ionicons name="arrow-back" size={24} color="white" />
+            </TouchableOpacity>
 
-    <Text style={styles.headerTitle}>Lớp 12A1</Text>
+            <Text style={styles.headerTitle}>Lớp 12A1</Text>
 
-    {/* Để cân giữa tiêu đề nếu không có nút bên phải */}
-    <View style={{ width: 24 }} />
-  </View>
-</LinearGradient>
+            {/* Để cân giữa tiêu đề nếu không có nút bên phải */}
+            <View style={{ width: 24 }} />
+          </View>
+        </LinearGradient>
 
         {/* Search Bar */}
         <View style={styles.searchContainer}>

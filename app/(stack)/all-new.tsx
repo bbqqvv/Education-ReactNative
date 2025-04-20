@@ -6,61 +6,73 @@ import {
   FlatList,
   TouchableOpacity,
   Dimensions,
-  Animated,
   Platform,
-  StatusBar
+  StatusBar,
+  ActivityIndicator,
 } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import NewsItem from '@/components/NewsItem';
+import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import NewsItem from '@/components/home/NewsItem';
+import { useNewsletter } from '../hooks/useNewsletter';
+import { NewsletterResponse } from '../api/newsletter/newsletter.type';
 
-const { width } = Dimensions.get('window');
 const HEADER_HEIGHT = Platform.OS === 'ios' ? 100 : 80;
 
 const AllNewsScreen = () => {
   const router = useRouter();
+  const { newsletters, loading, error } = useNewsletter(); // Sử dụng hook để lấy dữ liệu
 
   const handleBack = () => {
     Haptics.selectionAsync();
     router.back();
   };
 
-  const params = useLocalSearchParams();
-  const newsData = JSON.parse(params.newsData as string);
-
-  const handleNewsPress = (newsItem) => {
+  const handleNewsPress = (newsItem: NewsletterResponse) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     router.push({
-      pathname: '/stack/detail-new',
+      pathname: '/(stack)/detail-new',
       params: {
         id: newsItem.id,
-        title: newsItem.title,
-        date: newsItem.date,
-        time: newsItem.time,
-        content: newsItem.content,
-        author: newsItem.author,
-        imageUrl: newsItem.image // Added imageUrl for consistency
-      }
+      },
     });
   };
 
-  const renderItem = ({ item }) => (
+  const renderItem = ({ item }: { item: NewsletterResponse }) => (
     <TouchableOpacity
       onPress={() => handleNewsPress(item)}
       activeOpacity={0.7}
-      style={[
-        styles.newsItem,
-      ]}
+      style={styles.newsItem}
     >
       <NewsItem
         title={item.title}
-        date={item.date}
-        time={item.time}
-        image={item.image}
+        excerpt={item.excerpt}
+        category={item.category}
+        createdAt={item.createdAt}
+        image={item.thumbnailUrl}
       />
     </TouchableOpacity>
   );
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#59CBE8" />
+        <Text>Đang tải danh sách tin tức...</Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>{error}</Text>
+        <TouchableOpacity onPress={handleBack}>
+          <Text style={styles.backText}>Quay lại</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -80,7 +92,7 @@ const AllNewsScreen = () => {
       </View>
 
       <FlatList
-        data={newsData}
+        data={newsletters}
         keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={styles.listContainer}
         renderItem={renderItem}
@@ -140,6 +152,24 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#fff',
     letterSpacing: 0.5,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorText: {
+    color: 'red',
+    marginBottom: 10,
+  },
+  backText: {
+    color: '#59CBE8',
+    fontWeight: 'bold',
   },
 });
 

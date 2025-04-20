@@ -5,10 +5,10 @@ import apiClient from '../apiClient';
 
 
 export const AuthApi = {
-    // async register(data: UserCreationRequest): Promise<UserResponse> {
-    //     const response = await authApi.post(API_ENDPOINTS.AUTH.REGISTER, data);
-    //     return response.data;
-    // },
+    async register(data: UserCreationRequest): Promise<UserResponse> {
+        const response = await apiClient.post(API_ENDPOINTS.AUTH.REGISTER, data);
+        return response.data;
+    },
 
     async login(data: AuthenticationRequest): Promise<JwtResponse> {
         const response = await apiClient.post(API_ENDPOINTS.AUTH.LOGIN, data);

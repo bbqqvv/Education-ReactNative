@@ -4,10 +4,10 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
 const DetailScreen = () => {
-    const router = useRouter();
-    const handleBackPress = () => {
-        router.push('/stack/class');
-    };
+  const router = useRouter();
+  const handleBackPress = () => {
+    router.push('/(stack)/class');
+  };
 
   const params = useLocalSearchParams();
   const isTeacher = params.type === 'teacher';
@@ -17,7 +17,7 @@ const DetailScreen = () => {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={handleBackPress} style={{ position: 'absolute', left: 20, top: 40 }}>
-            <Ionicons name="arrow-back" size={24} color="black" />
+          <Ionicons name="arrow-back" size={24} color="black" />
         </TouchableOpacity>
         <View style={styles.avatarContainer}>
           <Ionicons name="person" size={60} color="#59CBE8" />
@@ -30,17 +30,17 @@ const DetailScreen = () => {
       <ScrollView contentContainerStyle={styles.infoContainer}>
         <View style={styles.infoCard}>
           <Text style={styles.sectionTitle}>Thông tin cơ bản</Text>
-          
+
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>Ngày sinh:</Text>
             <Text style={styles.infoValue}>{params.dob}</Text>
           </View>
-          
+
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>Giới tính:</Text>
             <Text style={styles.infoValue}>{params.gender}</Text>
           </View>
-          
+
           {isTeacher && (
             <>
               <View style={styles.infoRow}>
@@ -57,17 +57,17 @@ const DetailScreen = () => {
 
         <View style={styles.infoCard}>
           <Text style={styles.sectionTitle}>Liên hệ</Text>
-          
+
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>Email:</Text>
             <Text style={styles.infoValue}>{params.email}</Text>
           </View>
-          
+
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>Điện thoại:</Text>
             <Text style={styles.infoValue}>{params.phone}</Text>
           </View>
-          
+
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>Địa chỉ:</Text>
             <Text style={styles.infoValue}>{params.address}</Text>
