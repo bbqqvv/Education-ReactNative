@@ -27,9 +27,10 @@ export default function LoginPage() {
   const [biometricType, setBiometricType] = useState<string | null>(null);
   const [localError, setLocalError] = useState("");
 
-
   const dispatch: AppDispatch = useDispatch();
-  const { token, loading, error } = useSelector((state: RootState) => state.auth);
+  const { token, loading, error } = useSelector(
+    (state: RootState) => state.auth
+  );
 
   // Redirect after successful login
   useEffect(() => {
@@ -59,7 +60,7 @@ export default function LoginPage() {
 
       if (loginUser.fulfilled.match(resultAction)) {
         // Lưu token vào SecureStore
-        await SecureStore.setItemAsync('authToken', resultAction.payload.token);
+        await SecureStore.setItemAsync("authToken", resultAction.payload.token);
         dispatch(fetchUserInfo());
       } else {
         const errorMsg = resultAction.payload || "Đăng nhập thất bại";
@@ -70,7 +71,6 @@ export default function LoginPage() {
       setLocalError("Đăng nhập thất bại. Vui lòng thử lại.");
     }
   };
-
 
   const handleBiometricAuth = async () => {
     try {
@@ -83,7 +83,10 @@ export default function LoginPage() {
       const savedPassword = await SecureStore.getItemAsync("password");
 
       if (!savedEmail || !savedPassword) {
-        Alert.alert("Không có thông tin đăng nhập", "Vui lòng đăng nhập bằng email và mật khẩu trước");
+        Alert.alert(
+          "Không có thông tin đăng nhập",
+          "Vui lòng đăng nhập bằng email và mật khẩu trước"
+        );
         return;
       }
 
@@ -101,7 +104,10 @@ export default function LoginPage() {
         if (loginUser.fulfilled.match(loginResult)) {
           dispatch(fetchUserInfo());
         } else {
-          Alert.alert("Đăng nhập thất bại", "Không thể đăng nhập bằng sinh trắc học.");
+          Alert.alert(
+            "Đăng nhập thất bại",
+            "Không thể đăng nhập bằng sinh trắc học."
+          );
         }
       }
     } catch (err) {
@@ -123,10 +129,17 @@ export default function LoginPage() {
           return;
         }
 
-        const types = await LocalAuthentication.supportedAuthenticationTypesAsync();
-        if (types.includes(LocalAuthentication.AuthenticationType.FACIAL_RECOGNITION)) {
+        const types =
+          await LocalAuthentication.supportedAuthenticationTypesAsync();
+        if (
+          types.includes(
+            LocalAuthentication.AuthenticationType.FACIAL_RECOGNITION
+          )
+        ) {
           setBiometricType("Face ID");
-        } else if (types.includes(LocalAuthentication.AuthenticationType.FINGERPRINT)) {
+        } else if (
+          types.includes(LocalAuthentication.AuthenticationType.FINGERPRINT)
+        ) {
           setBiometricType("Touch ID");
         }
       }
@@ -189,7 +202,9 @@ export default function LoginPage() {
             </TouchableOpacity>
           </View>
           <TouchableOpacity
-            onPress={() => router.push("/(auth)/forgot-password/forgot-password-screen")}
+            onPress={() =>
+              router.push("/(auth)/forgot-password/forgot-password-screen")
+            }
           >
             <Text style={styles.forgotPassword}>Quên mật khẩu</Text>
           </TouchableOpacity>
@@ -227,9 +242,7 @@ export default function LoginPage() {
         )}
 
         {/* Error Messages */}
-        {localError && (
-          <Text style={styles.errorText}>{localError}</Text>
-        )}
+        {localError && <Text style={styles.errorText}>{localError}</Text>}
       </View>
     </SafeAreaView>
   );
