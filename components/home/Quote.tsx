@@ -12,7 +12,7 @@ import { useQuote } from "../../app/hooks/useQuote";
 
 const Quote = () => {
   const { quote, loading, error, fetchRandomQuote } = useQuote();
-  console.log("Quote component rendered", quote?.content, quote?.author);
+  // console.log("Quote component rendered", quote?.content, quote?.author);
 
   useEffect(() => {
     fetchRandomQuote();
