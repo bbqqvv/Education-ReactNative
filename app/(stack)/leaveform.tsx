@@ -10,59 +10,58 @@ import {
   Platform,
   Alert,
   Image,
-  ActivityIndicator
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useRouter } from 'expo-router';
+import { LeaveRequestApi } from '@/app/api/leave-rquest/leave-request.service';
+import { CreateLeaveRequestRequest } from '@/app/api/leave-rquest/leave-request.type';
 
 const LeaveApplication = () => {
   const router = useRouter();
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<CreateLeaveRequestRequest>({
     recipient: 'Giáo viên chủ nhiệm',
-    applicant: '',
-    startDate: new Date(),
-    endDate: new Date(),
+    senderName: '',
     reason: '',
+    className: '',
+    fromDate: new Date().toISOString().split('T')[0], // Stored as string for API
+    toDate: new Date().toISOString().split('T')[0],
+    imageFile: null,
   });
+  const [startDate, setStartDate] = useState(new Date()); // For date picker
+  const [endDate, setEndDate] = useState(new Date()); // For date picker
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
-  const [uploadedImage, setUploadedImage] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleBack = () => {
-    router.back();
-  };
-
-  const handleSubmit = () => {
-    if (!formData.applicant || !formData.reason) {
-      Alert.alert('Thiếu thông tin', 'Vui lòng điền đầy đủ thông tin bắt buộc');
-      return;
+  const formatDate = (date: Date): string => {
+    try {
+      if (!(date instanceof Date) || isNaN(date.getTime())) {
+        return 'Chọn ngày';
+      }
+      return date.toLocaleDateString('vi-VN');
+    } catch {
+      return 'Chọn ngày';
     }
-
-    setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      Alert.alert('Thành công', 'Đơn xin nghỉ của bạn đã được gửi');
-      router.back();
-    }, 1500);
   };
 
-  const formatDate = (date) => {
-    return date.toLocaleDateString('vi-VN');
-  };
-
-  const onDateChange = (event, selectedDate, field) => {
-    const currentDate = selectedDate || formData[field];
-    setFormData({ ...formData, [field]: currentDate });
-    if (field === 'startDate') setShowStartDatePicker(false);
-    if (field === 'endDate') setShowEndDatePicker(false);
+  const onDateChange = (event: any, selectedDate: Date | undefined, field: 'startDate' | 'endDate') => {
+    const currentDate = selectedDate || (field === 'startDate' ? startDate : endDate);
+    if (field === 'startDate') {
+      setStartDate(currentDate);
+      setFormData({ ...formData, fromDate: currentDate.toISOString().split('T')[0] });
+      setShowStartDatePicker(false);
+    } else {
+      setEndDate(currentDate);
+      setFormData({ ...formData, toDate: currentDate.toISOString().split('T')[0] });
+      setShowEndDatePicker(false);
+    }
   };
 
   const pickImage = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
+    const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [4, 3],
@@ -70,12 +69,72 @@ const LeaveApplication = () => {
     });
 
     if (!result.canceled) {
-      setUploadedImage(result.assets[0].uri);
+      setFormData({ ...formData, imageFile: result.assets[0].uri });
     }
   };
 
   const removeImage = () => {
-    setUploadedImage(null);
+    setFormData({ ...formData, imageFile: null });
+  };
+
+  const handleSubmit = async () => {
+    if (!formData.senderName || !formData.reason || !formData.className) {
+      Alert.alert('Thiếu thông tin', 'Vui lòng điền đầy đủ thông tin bắt buộc');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      console.log('Submitting form:', formData);
+
+      const formDataToSend = new FormData();
+      Object.entries(formData).forEach(([key, value]) => {
+        if (value !== null && value !== undefined) {
+          if (key === 'imageFile' && value) {
+            formDataToSend.append(key, {
+              uri: value,
+              name: 'evidence.jpg',
+              type: 'image/jpeg',
+            } as any);
+          } else {
+            formDataToSend.append(key, value.toString());
+          }
+        }
+      });
+
+      // Log FormData entries
+    for (let pair of (formDataToSend as any)._parts) {
+      console.log(`FormData entry: ${pair[0]} = ${pair[1]}`);
+    }
+
+      const response = await LeaveRequestApi.create(formDataToSend);
+      console.log('Response:', response);
+
+      if (response.success) {
+        Alert.alert('Thành công', 'Đơn xin nghỉ đã được gửi');
+        router.back();
+      } else {
+        Alert.alert('Lỗi', response.message || 'Gửi đơn thất bại');
+      }
+    } catch (error: any) {
+      console.log('Error details:', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+      });
+      if (error.response?.status === 403) {
+        Alert.alert('Lỗi', 'Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.');
+        router.push('/login');
+      } else {
+        Alert.alert('Lỗi', error.message || 'Đã xảy ra lỗi khi gửi đơn');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleBack = () => {
+    router.back();
   };
 
   return (
@@ -100,7 +159,9 @@ const LeaveApplication = () => {
       >
         {/* Recipient */}
         <View style={styles.section}>
-          <Text style={styles.label}>Kính gửi: <Text style={styles.required}>*</Text></Text>
+          <Text style={styles.label}>
+            Kính gửi: <Text style={styles.required}>*</Text>
+          </Text>
           <View style={styles.inputContainer}>
             <TextInput
               style={styles.input}
@@ -112,16 +173,34 @@ const LeaveApplication = () => {
           </View>
         </View>
 
-        {/* Applicant */}
+        {/* Sender Name */}
         <View style={styles.section}>
-          <Text style={styles.label}>Người làm đơn: <Text style={styles.required}>*</Text></Text>
+          <Text style={styles.label}>
+            Người làm đơn: <Text style={styles.required}>*</Text>
+          </Text>
           <View style={styles.inputContainer}>
             <TextInput
               style={styles.input}
               placeholder="Nhập họ và tên"
               placeholderTextColor="#999"
-              value={formData.applicant}
-              onChangeText={(text) => setFormData({ ...formData, applicant: text })}
+              value={formData.senderName}
+              onChangeText={(text) => setFormData({ ...formData, senderName: text })}
+            />
+          </View>
+        </View>
+
+        {/* Class Name */}
+        <View style={styles.section}>
+          <Text style={styles.label}>
+            Lớp: <Text style={styles.required}>*</Text>
+          </Text>
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={styles.input}
+              placeholder="Nhập tên lớp"
+              placeholderTextColor="#999"
+              value={formData.className}
+              onChangeText={(text) => setFormData({ ...formData, className: text })}
             />
           </View>
         </View>
@@ -130,14 +209,16 @@ const LeaveApplication = () => {
 
         {/* Leave Period */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Thời gian nghỉ: <Text style={styles.required}>*</Text></Text>
+          <Text style={styles.sectionTitle}>
+            Thời gian nghỉ: <Text style={styles.required}>*</Text>
+          </Text>
           <View style={styles.dateContainer}>
             <TouchableOpacity
               style={[styles.input, styles.dateInput]}
               onPress={() => setShowStartDatePicker(true)}
               activeOpacity={0.7}
             >
-              <Text style={styles.dateText}>{formatDate(formData.startDate)}</Text>
+              <Text style={styles.dateText}>{formatDate(startDate)}</Text>
               <MaterialIcons name="date-range" size={20} color="#59CBE8" />
             </TouchableOpacity>
 
@@ -148,14 +229,14 @@ const LeaveApplication = () => {
               onPress={() => setShowEndDatePicker(true)}
               activeOpacity={0.7}
             >
-              <Text style={styles.dateText}>{formatDate(formData.endDate)}</Text>
+              <Text style={styles.dateText}>{formatDate(endDate)}</Text>
               <MaterialIcons name="date-range" size={20} color="#59CBE8" />
             </TouchableOpacity>
           </View>
 
           {showStartDatePicker && (
             <DateTimePicker
-              value={formData.startDate}
+              value={startDate}
               mode="date"
               display="spinner"
               onChange={(event, date) => onDateChange(event, date, 'startDate')}
@@ -164,11 +245,11 @@ const LeaveApplication = () => {
 
           {showEndDatePicker && (
             <DateTimePicker
-              value={formData.endDate}
+              value={endDate}
               mode="date"
               display="spinner"
               onChange={(event, date) => onDateChange(event, date, 'endDate')}
-              minimumDate={formData.startDate}
+              minimumDate={startDate}
             />
           )}
         </View>
@@ -177,7 +258,9 @@ const LeaveApplication = () => {
 
         {/* Reason */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Lý do nghỉ: <Text style={styles.required}>*</Text></Text>
+          <Text style={styles.sectionTitle}>
+            Lý do nghỉ: <Text style={styles.required}>*</Text>
+          </Text>
           <View style={styles.inputContainer}>
             <TextInput
               style={[styles.input, styles.multilineInput]}
@@ -196,9 +279,9 @@ const LeaveApplication = () => {
         {/* Evidence */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Bằng chứng (nếu có)</Text>
-          {uploadedImage ? (
+          {formData.imageFile ? (
             <View style={styles.imagePreviewContainer}>
-              <Image source={{ uri: uploadedImage }} style={styles.uploadedImage} />
+              <Image source={{ uri: formData.imageFile }} style={styles.uploadedImage} />
               <TouchableOpacity style={styles.removeImageButton} onPress={removeImage}>
                 <Ionicons name="close" size={20} color="white" />
               </TouchableOpacity>
@@ -258,7 +341,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingTop: 50,
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight + 10 : 50,
     paddingBottom: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },

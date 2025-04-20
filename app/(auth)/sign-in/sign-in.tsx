@@ -47,12 +47,12 @@ export default function LoginPage() {
       setLocalError("Vui lòng nhập đầy đủ email và mật khẩu.");
       return;
     }
-
+  
     setLocalError("");
-
+  
     try {
       const resultAction = await dispatch(loginUser({ email, password }));
-
+  
       if (loginUser.fulfilled.match(resultAction)) {
         // Chỉ dùng AsyncStorage
         await AsyncStorage.setItem("authToken", resultAction.payload.token);
