@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -38,7 +38,6 @@ export default function Home() {
   const fadeAnim = new Animated.Value(0);
   const { newsletters, error } = useNewsletter();
 
-
   useEffect(() => {
     Animated.timing(fadeAnim, {
       toValue: 1,
@@ -50,25 +49,32 @@ export default function Home() {
 
   const handleFeaturePress = (label: string) => {
     const routes: Record<string, string> = {
-      'Lớp học': '/(stack)/class',
-      'Lịch thi': '/(stack)/examSchedule',
-      'Xin nghỉ': '/(stack)/leaveofabsence',
-      'Vi phạm': '/(stack)/violate',
-      'TKB': '/(stack)/timetable',
-      'Tất cả': '/(stack)/allFeatures'
+      "Lớp học": "/(stack)/class",
+      "Lịch thi": "/(stack)/examSchedule",
+      "Xin nghỉ": "/(stack)/leaveofabsence",
+      "Vi phạm": "/(stack)/violate",
+      TKB: "/(stack)/timetable",
+      "Tất cả": "/(stack)/allFeatures",
     };
 
     if (routes[label]) {
-      router.push(routes[label] as "/(stack)/class" | "/(stack)/examSchedule" | "/(stack)/leaveofabsence" | "/(stack)/violate" | "/(stack)/timetable" | "/(stack)/allFeatures");
+      router.push(
+        routes[label] as
+          | "/(stack)/class"
+          | "/(stack)/examSchedule"
+          | "/(stack)/leaveofabsence"
+          | "/(stack)/violate"
+          | "/(stack)/timetable"
+          | "/(stack)/allFeatures"
+      );
     } else {
-      console.log('Unknown feature:', label);
+      console.log("Unknown feature:", label);
     }
   };
 
-
   const handleNewsPress = (newsItem: any) => {
     router.push({
-      pathname: '/(stack)/detail-new',
+      pathname: "/(stack)/detail-new",
       params: {
         id: newsItem.id,
       },
@@ -77,7 +83,7 @@ export default function Home() {
 
   const handleViewAllNews = () => {
     router.push({
-      pathname: '/(stack)/all-new',
+      pathname: "/(stack)/all-new",
       params: {
         newsData: JSON.stringify(newsletters),
       },
@@ -102,7 +108,7 @@ export default function Home() {
     return (
       <SafeAreaView style={styles.loadingContainer}>
         <LinearGradient
-          colors={['#f7f9fc', '#e3f2fd']}
+          colors={["#f7f9fc", "#e3f2fd"]}
           style={styles.loadingBackground}
         >
           <ActivityIndicator size="large" color="#3b82f6" />
@@ -111,7 +117,6 @@ export default function Home() {
       </SafeAreaView>
     );
   }
-
 
   return (
     <Animated.View style={[styles.container]}>
@@ -123,13 +128,13 @@ export default function Home() {
             refreshing={refreshing}
             onRefresh={onRefresh}
             tintColor="#3b82f6"
-            colors={['#3b82f6']}
+            colors={["#3b82f6"]}
           />
         }
       >
         {/* Header with gradient background */}
         <LinearGradient
-          colors={['#79CDCD', '#E8E8E8']}
+          colors={["#79CDCD", "#E8E8E8"]}
           style={styles.headerGradient}
         >
           <View style={styles.headerContainer}>
@@ -137,7 +142,7 @@ export default function Home() {
               <HomeProfile user={user} />
               <View style={styles.headerActions}>
                 <SearchField
-                  onSearch={(query) => console.log('Search:', query)}
+                  onSearch={(query) => console.log("Search:", query)}
                   containerStyle={styles.searchContainer}
                 />
                 <NotificationButton />
@@ -189,7 +194,7 @@ export default function Home() {
             {newsletters.length === 0 ? (
               <ActivityIndicator size="large" color="#3b82f6" />
             ) : error ? (
-              <Text style={{ color: 'red' }}>{error}</Text>
+              <Text style={{ color: "red" }}>{error}</Text>
             ) : (
               <FlatList
                 data={newsletters}
@@ -212,7 +217,6 @@ export default function Home() {
               />
             )}
           </View>
-
 
           {/* Upcoming Events */}
           <View style={styles.eventsContainer}>
@@ -242,19 +246,19 @@ export default function Home() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f7f9fc',
+    backgroundColor: "#f7f9fc",
   },
   loadingContainer: {
     flex: 1,
   },
   loadingBackground: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   loadingText: {
     marginTop: 16,
-    color: '#3b82f6',
+    color: "#3b82f6",
     fontSize: 16,
   },
   scrollContainer: {
@@ -264,7 +268,7 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
@@ -276,14 +280,14 @@ const styles = StyleSheet.create({
     marginTop: 26,
   },
   headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 20,
   },
   headerActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 16,
   },
   searchContainer: {
@@ -294,74 +298,74 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   featureContainer: {
-    backgroundColor: '#ffffff',
+    backgroundColor: "#ffffff",
     borderRadius: 16,
     padding: 16,
     marginBottom: 16,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
   },
   featureGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
     marginTop: 8,
   },
   quoteContainer: {
-    backgroundColor: '#ffffff',
+    backgroundColor: "#ffffff",
     borderRadius: 16,
     padding: 5,
     marginBottom: 16,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
   },
   newsContainer: {
-    backgroundColor: '#ffffff',
+    backgroundColor: "#ffffff",
     borderRadius: 16,
     padding: 16,
     marginBottom: 16,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
   },
   eventsContainer: {
-    backgroundColor: '#ffffff',
+    backgroundColor: "#ffffff",
     borderRadius: 16,
     padding: 16,
     marginBottom: 16,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
   },
   sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 16,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#1f2937',
+    fontWeight: "600",
+    color: "#1f2937",
   },
   viewAllButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   viewAllText: {
-    color: '#79CDCD',
+    color: "#79CDCD",
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: "500",
     marginRight: 4,
   },
   newsList: {
@@ -369,32 +373,32 @@ const styles = StyleSheet.create({
   },
   newsCard: {
     borderRadius: 12,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   eventCard: {
-    backgroundColor: '#f0f9ff',
+    backgroundColor: "#f0f9ff",
     borderRadius: 12,
     padding: 16,
     borderLeftWidth: 4,
-    borderLeftColor: '#3b82f6',
+    borderLeftColor: "#3b82f6",
   },
   eventTitle: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#1f2937',
+    fontWeight: "600",
+    color: "#1f2937",
     marginBottom: 4,
   },
   eventDate: {
     fontSize: 14,
-    color: '#4b5563',
+    color: "#4b5563",
     marginBottom: 4,
   },
   eventLocation: {
     fontSize: 14,
-    color: '#3b82f6',
-    fontWeight: '500',
+    color: "#3b82f6",
+    fontWeight: "500",
   },
   footerHome: {
-    marginBottom: 60
-  }
+    marginBottom: 60,
+  },
 });

@@ -1,5 +1,6 @@
+// Quote.tsx
 import { Ionicons } from "@expo/vector-icons";
-import React, { useState } from "react";
+import React, { useEffect } from "react";
 import {
   View,
   Text,
@@ -7,34 +8,40 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from "react-native";
+import { useQuote } from "../../app/hooks/useQuote";
 
-const Quote = ({ quote, author, onReload }) => {
-  const [loading, setLoading] = useState(false);
+const Quote = () => {
+  const { quote, loading, error, fetchRandomQuote } = useQuote();
+  console.log("Quote component rendered", quote?.content, quote?.author);
 
-  // Function to handle reloading the quote
-  const handleReload = async () => {
-    setLoading(true);
-    await onReload();
-    setLoading(false);
-  };
+  useEffect(() => {
+    fetchRandomQuote();
+  }, [fetchRandomQuote]);
 
   return (
     <View style={styles.container}>
-      {/* Đường kẻ bên trái */}
       <View style={styles.line} />
 
-      {/* Nội dung trích dẫn */}
       <View style={styles.content}>
-        <Text style={styles.quote}>"{quote}"</Text>
-        <Text style={styles.author}>- {author}</Text>
+        {error ? (
+          <Text style={[styles.quote, { color: "red" }]}>{error}</Text>
+        ) : loading ? (
+          <Text style={styles.quote}>Đang tải trích dẫn...</Text>
+        ) : quote ? (
+          <>
+            <Text style={styles.quote}>"{quote.content}"</Text>
+            <Text style={styles.author}>- {quote.author}</Text>
+          </>
+        ) : (
+          <Text style={styles.quote}>Không có trích dẫn</Text>
+        )}
       </View>
 
-      {/* Nút reload */}
       <View style={styles.reloadContainer}>
         {loading ? (
           <ActivityIndicator size="small" color="#63BAD5" />
         ) : (
-          <TouchableOpacity onPress={handleReload}>
+          <TouchableOpacity onPress={fetchRandomQuote}>
             <Ionicons name="reload-outline" size={24} color="#63BAD5" />
           </TouchableOpacity>
         )}
