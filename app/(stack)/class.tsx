@@ -87,8 +87,8 @@ const Class = () => {
     return data.filter(item =>
       item.name.toLowerCase().includes(searchText.toLowerCase()) ||
       item.email.toLowerCase().includes(searchText.toLowerCase()) ||
-      (activeTab === 'student' && item.studentId.toLowerCase().includes(searchText.toLowerCase())) ||
-      (activeTab === 'teacher' && item.teacherId.toLowerCase().includes(searchText.toLowerCase()))
+      (activeTab === 'student' && item.id.toLowerCase().includes(searchText.toLowerCase())) ||
+      (activeTab === 'teacher' && item.id.toLowerCase().includes(searchText.toLowerCase()))
     );
   }, [activeTab, searchText]);
 
@@ -204,10 +204,10 @@ const Class = () => {
                   <View style={styles.nameRow}>
                     <Text style={styles.name} numberOfLines={1}>{item.name}</Text>
                     {activeTab === 'student' && (
-                      <Text style={styles.idText}>{item.studentId}</Text>
+                      <Text style={styles.idText}>{item.id}</Text>
                     )}
                     {activeTab === 'teacher' && (
-                      <Text style={styles.idText}>{item.teacherId}</Text>
+                      <Text style={styles.idText}>{item.id}</Text>
                     )}
                   </View>
                   <Text style={styles.detailText}>

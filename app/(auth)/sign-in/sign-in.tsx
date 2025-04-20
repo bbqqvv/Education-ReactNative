@@ -12,12 +12,12 @@ import {
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as LocalAuthentication from "expo-local-authentication";
-import * as SecureStore from "expo-secure-store";
+import AsyncStorage from "@react-native-async-storage/async-storage"; // Import AsyncStorage cho mobile
+import { Platform } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/app/store/store";
 import { fetchUserInfo, loginUser } from "@/app/store/slices/authSlice";
 import { AppDispatch } from "@/app/store/store";
-import { Platform } from "react-native";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -27,25 +27,22 @@ export default function LoginPage() {
   const [biometricType, setBiometricType] = useState<string | null>(null);
   const [localError, setLocalError] = useState("");
 
-
   const dispatch: AppDispatch = useDispatch();
   const { token, loading, error } = useSelector((state: RootState) => state.auth);
 
-  // Redirect after successful login
   useEffect(() => {
     if (token) {
       router.replace("/(tabs)/home");
     }
   }, [token]);
 
-  // Handle errors from redux
   useEffect(() => {
     if (error) {
       setLocalError(error);
     }
   }, [error]);
 
-  // Lưu token vào AsyncStorage sau khi đăng nhập thành công
+  // Chỉ dùng AsyncStorage, bỏ localStorage và check "web"
   const handleSubmit = async () => {
     if (!email || !password) {
       setLocalError("Vui lòng nhập đầy đủ email và mật khẩu.");
@@ -58,8 +55,11 @@ export default function LoginPage() {
       const resultAction = await dispatch(loginUser({ email, password }));
 
       if (loginUser.fulfilled.match(resultAction)) {
-        // Lưu token vào SecureStore
-        await SecureStore.setItemAsync('authToken', resultAction.payload.token);
+        // Chỉ dùng AsyncStorage
+        await AsyncStorage.setItem("authToken", resultAction.payload.token);
+        await AsyncStorage.setItem("email", email);        // lưu email để dùng cho biometrics
+        await AsyncStorage.setItem("password", password);  // lưu password để dùng cho biometrics
+
         dispatch(fetchUserInfo());
       } else {
         const errorMsg = resultAction.payload || "Đăng nhập thất bại";
@@ -71,16 +71,10 @@ export default function LoginPage() {
     }
   };
 
-
   const handleBiometricAuth = async () => {
     try {
-      if (Platform.OS === "web") {
-        Alert.alert("Thiết bị không hỗ trợ sinh trắc học trên trình duyệt");
-        return;
-      }
-
-      const savedEmail = await SecureStore.getItemAsync("email");
-      const savedPassword = await SecureStore.getItemAsync("password");
+      const savedEmail = await AsyncStorage.getItem("email");
+      const savedPassword = await AsyncStorage.getItem("password");
 
       if (!savedEmail || !savedPassword) {
         Alert.alert("Không có thông tin đăng nhập", "Vui lòng đăng nhập bằng email và mật khẩu trước");
@@ -109,8 +103,6 @@ export default function LoginPage() {
       setLocalError("Xác thực sinh trắc học thất bại");
     }
   };
-
-  // Check biometric support on component mount
   useEffect(() => {
     const checkBiometricSupport = async () => {
       const compatible = await LocalAuthentication.hasHardwareAsync();

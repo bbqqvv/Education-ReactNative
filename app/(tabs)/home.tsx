@@ -12,10 +12,8 @@ import {
   Animated,
   Easing
 } from 'react-native';
-
 import HomeProfile from '@/components/HomeProfile';
 import { quotes, features } from '@/constants';
-
 import FooterHome from '@/components/FooterHome';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../hooks/useAuth';
@@ -145,7 +143,6 @@ export default function Home() {
                 <NotificationButton />
               </View>
             </View>
-
           </View>
         </LinearGradient>
 
@@ -160,7 +157,7 @@ export default function Home() {
                   key={`feature-${index}`}
                   icon={feature.icon}
                   label={feature.label}
-                  onPress={() => handleFeaturePress(feature.label)} // Truyền onPress
+                  onPress={() => handleFeaturePress(feature.label)}
                 />
               ))}
             </View>
