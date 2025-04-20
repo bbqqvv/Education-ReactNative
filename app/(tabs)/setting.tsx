@@ -37,23 +37,52 @@ const Setting = () => {
     {
       title: "TÀI KHOẢN",
       items: [
-        { icon: "person-outline", text: "Thông tin cá nhân", onPress: () => { } },
-        { icon: "lock-closed-outline", text: "Bảo mật tài khoản", onPress: () => { } },
-        { icon: "notifications-outline", text: "Thông báo", onPress: () => { } },
+        {
+          icon: "person-outline",
+          text: "Thông tin cá nhân",
+          onPress: () => router.push("/(stack)/personal-info"),
+        },
+        {
+          icon: "lock-closed-outline",
+          text: "Bảo mật tài khoản",
+          onPress: () => router.push("/(stack)/account-security"),
+        },
+        {
+          icon: "notifications-outline",
+          text: "Thông báo",
+          onPress: () => router.push("/(stack)/notifications"),
+        },
       ],
     },
     {
       title: "HỖ TRỢ",
       items: [
-        { icon: "help-circle-outline", text: "Trung tâm trợ giúp", onPress: () => { } },
-        { icon: "information-circle-outline", text: "Điều khoản & Chính sách", onPress: () => { } },
-        { icon: "star-outline", text: "Đánh giá ứng dụng", onPress: () => { } },
+        {
+          icon: "help-circle-outline",
+          text: "Trung tâm trợ giúp",
+          onPress: () => router.push("/(stack)/help-center"),
+        },
+        {
+          icon: "information-circle-outline",
+          text: "Điều khoản & Chính sách",
+          onPress: () => router.push("/(stack)/terms-and-policies"),
+        },
+        {
+          icon: "star-outline",
+          text: "Đánh giá ứng dụng",
+          onPress: () => router.push("/(stack)/rate-app"),
+        },
       ],
     },
     {
       title: "KHÁC",
       items: [
-        { icon: "log-out-outline", text: "Đăng xuất", color: "#FF3B30", onPress: handleLogout },
+        {
+          icon: "log-out-outline",
+          text: "Đăng xuất",
+          color: "#FF3B30",
+          onPress: handleLogout,
+        },
       ],
     },
   ];
