@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -10,82 +10,39 @@ import {
   Animated,
   Easing,
   FlatList,
-  ActivityIndicator
+  ActivityIndicator,
+  RefreshControl
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
+import { LeaveRequestApi } from '@/app/api/leave-rquest/leave-request.service';
+import { LeaveRequest, LeaveRequestStatus } from '@/app/api/leave-rquest/leave-request.type';
 
 // Types
 type LeaveStatus = 'approved' | 'pending' | 'rejected';
 type FilterStatus = 'all' | LeaveStatus;
 
 interface LeaveApplication {
-  id: number;
+  id: string;
   status: LeaveStatus;
-  applicant: string;
+  senderName: string;
   reason: string;
-  date: string;
-  days: number;
-  submitted: string;
-  type: string;
-  approvedBy?: string;
-  rejectedReason?: string;
+  fromDate: string;
+  toDate: string;
+  createdAt: string;
+  className: string;
+  recipient: string;
+  imageFile: string | null;
 }
-
-// Sample Data
-const SAMPLE_LEAVE_APPLICATIONS: LeaveApplication[] = [
-  {
-    id: 1,
-    status: 'pending',
-    applicant: 'Bùi Quốc Văn',
-    reason: 'Việc gia đình',
-    date: '03/05/2022 - 03/05/2022',
-    days: 1,
-    submitted: '02/05/2022 08:30',
-    type: 'Nghỉ có phép'
-  },
-  {
-    id: 2,
-    status: 'approved',
-    applicant: 'Nguyễn Văn A',
-    reason: 'Khám bệnh',
-    date: '05/05/2022 - 06/05/2022',
-    days: 2,
-    submitted: '04/05/2022 14:15',
-    type: 'Nghỉ ốm',
-    approvedBy: 'Trưởng phòng Nguyễn Thị B'
-  },
-  {
-    id: 3,
-    status: 'rejected',
-    applicant: 'Trần Thị B',
-    reason: 'Việc cá nhân',
-    date: '10/05/2022 - 11/05/2022',
-    days: 2,
-    submitted: '09/05/2022 09:45',
-    type: 'Nghỉ không lương',
-    rejectedReason: 'Không đủ lý do chính đáng'
-  },
-  {
-    id: 4,
-    status: 'pending',
-    applicant: 'Lê Văn C',
-    reason: 'Đám cưới',
-    date: '15/05/2022 - 16/05/2022',
-    days: 2,
-    submitted: '14/05/2022 10:20',
-    type: 'Nghỉ có phép'
-  }
-];
 
 // Helper Functions
 const getStatusText = (status: LeaveStatus | FilterStatus): string => {
   const statusMap: Record<string, string> = {
-    approved: 'Đã duyệt',
-    pending: 'Chờ duyệt',
-    rejected: 'Từ chối',
-    all: 'Tất cả'
+    [LeaveRequestStatus.APPROVED]: 'Đã duyệt',
+    [LeaveRequestStatus.PENDING]: 'Chờ duyệt',
+    [LeaveRequestStatus.REJECTED]: 'Từ chối',
+    all: 'Tất cả',
   };
   return statusMap[status] || status;
 };
@@ -107,6 +64,18 @@ const getStatusIcon = (status: LeaveStatus): string => {
     rejected: 'close-circle'
   };
   return iconMap[status] || 'help-circle';
+};
+
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('vi-VN');
+};
+
+const calculateDays = (startDate: string, endDate: string): number => {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  const diffTime = Math.abs(end.getTime() - start.getTime());
+  return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
 };
 
 // Sub Components
@@ -136,46 +105,33 @@ const LeaveCard = React.memo(({ item }: { item: LeaveApplication }) => {
       <View style={styles.cardHeader}>
         <StatusBadge status={item.status} />
         <Text style={styles.daysBadge}>
-          {item.days} {item.days > 1 ? 'ngày' : 'ngày'}
+          {calculateDays(item.fromDate, item.toDate)} ngày
         </Text>
       </View>
 
       <View style={styles.cardBody}>
-        <Text style={styles.applicantText}>{item.applicant}</Text>
+        <Text style={styles.applicantText}>{item.senderName}</Text>
         <Text style={styles.reasonText}>{item.reason}</Text>
+        <Text style={styles.classText}>Lớp: {item.className}</Text>
 
         <View style={styles.detailRow}>
           <Ionicons name="calendar" size={16} color="#6B7280" />
-          <Text style={styles.detailText}>{item.date}</Text>
+          <Text style={styles.detailText}>
+            {formatDate(item.fromDate)} - {formatDate(item.toDate)}
+          </Text>
         </View>
 
         <View style={styles.detailRow}>
           <Ionicons name="time" size={16} color="#6B7280" />
-          <Text style={styles.detailText}>Gửi: {item.submitted}</Text>
+          <Text style={styles.detailText}>
+            Gửi: {formatDate(item.createdAt)} {new Date(item.createdAt).toLocaleTimeString('vi-VN')}
+          </Text>
         </View>
 
         <View style={styles.detailRow}>
-          <Ionicons name="document-text" size={16} color="#6B7280" />
-          <Text style={styles.detailText}>Loại: {item.type}</Text>
+          <Ionicons name="person" size={16} color="#6B7280" />
+          <Text style={styles.detailText}>Gửi đến: {item.recipient}</Text>
         </View>
-
-        {item.status === 'approved' && (
-          <View style={styles.detailRow}>
-            <Ionicons name="checkmark" size={16} color="#10B981" />
-            <Text style={[styles.detailText, { color: '#10B981' }]}>
-              Người duyệt: {item.approvedBy}
-            </Text>
-          </View>
-        )}
-
-        {item.status === 'rejected' && (
-          <View style={styles.detailRow}>
-            <Ionicons name="close" size={16} color="#EF4444" />
-            <Text style={[styles.detailText, { color: '#EF4444' }]}>
-              Lý do từ chối: {item.rejectedReason}
-            </Text>
-          </View>
-        )}
       </View>
     </Animated.View>
   );
@@ -214,35 +170,80 @@ const FilterTab = React.memo(({
 // Main Component
 const LeaveList = () => {
   const router = useRouter();
+  const [leaveRequests, setLeaveRequests] = useState<LeaveApplication[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
   const [activeStatus, setActiveStatus] = useState<FilterStatus>('all');
-  const [isLoading, setIsLoading] = useState(false);
 
-  // Simulate loading data
-  React.useEffect(() => {
-    setIsLoading(true);
-    const timer = setTimeout(() => setIsLoading(false), 800);
-    return () => clearTimeout(timer);
+  const fetchLeaveRequests = async () => {
+    try {
+      const response = await LeaveRequestApi.getAll();
+      
+      if (response.success) {
+        const mappedData = response.data?.map((item: LeaveRequest) => ({
+          ...item,
+          status: item.status.toLowerCase() as LeaveStatus
+        }));
+        setLeaveRequests(mappedData);
+      } else {
+        setError(response.message || 'Lỗi khi tải dữ liệu');
+      }
+    } catch (err) {
+      setError(err.message || 'Lỗi kết nối máy chủ');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchLeaveRequests();
   }, []);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchLeaveRequests();
+  };
 
   // Filter and count applications
   const { filteredApplications, statusCounts } = useMemo(() => {
     const counts = {
-      all: SAMPLE_LEAVE_APPLICATIONS.length,
+      all: leaveRequests.length,
       approved: 0,
       pending: 0,
       rejected: 0,
     };
 
-    const filtered = SAMPLE_LEAVE_APPLICATIONS.filter(app => {
+    const filtered = leaveRequests.filter(app => {
       counts[app.status]++;
       return activeStatus === 'all' || app.status === activeStatus;
     });
 
     return { filteredApplications: filtered, statusCounts: counts };
-  }, [activeStatus]);
+  }, [activeStatus, leaveRequests]);
 
   const handleBack = () => router.back();
   const handleCreateLeave = () => router.push('/(stack)/leaveform');
+
+  if (loading && !refreshing) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#06b6d4" />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text style={styles.errorText}>{error}</Text>
+        <TouchableOpacity onPress={fetchLeaveRequests}>
+          <Text style={styles.retryText}>Thử lại</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -285,28 +286,32 @@ const LeaveList = () => {
         ))}
       </ScrollView>
 
-      {/* Loading State */}
-      {isLoading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#06b6d4" />
-        </View>
-      ) : (
-        /* Leave Applications List */
-        <FlatList
-          data={filteredApplications}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => <LeaveCard item={item} />}
-          ListEmptyComponent={
-            <View style={styles.emptyState}>
-              <Ionicons name="file-tray" size={48} color="#D1D5DB" />
-              <Text style={styles.emptyText}>Không có đơn nào</Text>
-              <Text style={styles.emptySubtext}>Bạn chưa có đơn xin nghỉ nào ở mục này</Text>
-            </View>
-          }
-          contentContainerStyle={styles.listContainer}
-          showsVerticalScrollIndicator={false}
-        />
-      )}
+      {/* Leave Applications List */}
+      <FlatList
+        data={filteredApplications}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => <LeaveCard item={item} />}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#06b6d4']}
+            tintColor="#06b6d4"
+          />
+        }
+        ListEmptyComponent={
+          <View style={styles.emptyState}>
+            <Ionicons name="file-tray" size={48} color="#D1D5DB" />
+            <Text style={styles.emptyText}>Không có đơn nào</Text>
+            <Text style={styles.emptySubtext}>
+              {activeStatus === 'all' 
+                ? 'Bạn chưa có đơn xin nghỉ nào' 
+                : `Không có đơn ở trạng thái ${getStatusText(activeStatus)}`}
+            </Text>
+          </View>
+        }
+        contentContainerStyle={styles.listContainer}
+      />
 
       {/* Create New Leave Button */}
       <TouchableOpacity
@@ -424,6 +429,10 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#1F2937',
   },
+  classText: {
+    fontSize: 14,
+    color: '#4B5563',
+  },
   reasonText: {
     fontSize: 14,
     color: '#4B5563',
@@ -432,6 +441,7 @@ const styles = StyleSheet.create({
   detailRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginTop: 4,
   },
   detailText: {
     fontSize: 13,
@@ -481,6 +491,17 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#F9FAFB',
+  },
+  errorText: {
+    color: '#EF4444',
+    fontSize: 16,
+    marginBottom: 10,
+  },
+  retryText: {
+    color: '#06b6d4',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 

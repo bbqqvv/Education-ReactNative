@@ -8,6 +8,7 @@ import {
   } from './leave-request.type';
   import { API_ENDPOINTS } from '@/constants/api';
   import apiClient from '../apiClient';
+  import * as SecureStore from 'expo-secure-store';
   
   export const LeaveRequestApi = {
     /**
@@ -22,6 +23,7 @@ import {
      * Tạo đơn xin nghỉ mới
      */
     async create(data: CreateLeaveRequestRequest): Promise<LeaveRequestResponse> {
+      const token = await SecureStore.getItemAsync('authToken');
       const formData = new FormData();
       
       // Append các trường dữ liệu
@@ -42,6 +44,7 @@ import {
         {
           headers: {
             'Content-Type': 'multipart/form-data',
+            'Authorization': `Bearer ${token}`,
           },
         }
       );
@@ -61,6 +64,14 @@ import {
       );
       return response.data;
     },
+
+    /**
+   * Lấy danh sách đơn xin nghỉ của người dùng hiện tại
+   */
+  async getMyRequests(): Promise<LeaveRequestsResponse> {
+    const response = await apiClient.get(API_ENDPOINTS.LEAVE_REQUESTS.GET_MY_REQUESTS);
+    return response.data;
+  },
   
     /**
      * Xóa đơn xin nghỉ
