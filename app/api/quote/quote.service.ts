@@ -4,6 +4,7 @@ import apiClient from "../apiClient";
 import { QuoteRequest, QuoteResponse } from "./quote.type";
 
 export const QuoteApi = {
+
   async addOrUpdateQuote(data: QuoteRequest): Promise<QuoteResponse> {
     const response = await apiClient.post(
       API_ENDPOINTS.QUOTE.ADD_OR_UPDATE,
