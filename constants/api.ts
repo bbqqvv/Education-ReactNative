@@ -65,4 +65,12 @@ export const API_ENDPOINTS = {
         UPDATE: (id: string) => `/timetables/${id}`,
         GET_WEEKLY_SCHEDULE: (className: string) => `/timetables/class/${className}/weekly`,
     },
+    LEAVE_REQUESTS: {
+        GET_ALL: '/leave-requests',
+        GET_MY_REQUESTS: '/leave-requests/my', // Thêm endpoint mới
+        GET_BY_ID: (id: string) => `/leave-requests/${id}`, // Sửa thành function để truyền id
+        CREATE: '/leave-requests',
+        UPDATE_STATUS: (id: string) => `/leave-requests/${id}/status`, // Sửa theo endpoint thực tế
+        DELETE: (id: string) => `/leave-requests/${id}` // Sửa thành function
+    },
 };
