@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -15,6 +15,7 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import GroupCreateModal from '@/components/GroupCreateModal';
 
 const discussions = [
   {
@@ -53,10 +54,19 @@ const discussions = [
   },
 ];
 
+const users = [
+  { id: '1', name: 'Nguyễn Văn A', avatar: require('../../assets/images/avatar.png') },
+  { id: '2', name: 'Trần Thị B', avatar: require('../../assets/images/avatar.png') },
+  { id: '3', name: 'Lê Văn C', avatar: require('../../assets/images/avatar.png') },
+  { id: '4', name: 'Phạm Thị D', avatar: require('../../assets/images/avatar.png') },
+  { id: '5', name: 'Hoàng Văn E', avatar: require('../../assets/images/avatar.png') },
+];
+
 const MessageScreen = () => {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
-  const fadeAnim = new Animated.Value(0);
+  const [groupModalVisible, setGroupModalVisible] = useState(false);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
 
   React.useEffect(() => {
     Animated.timing(fadeAnim, {
@@ -79,36 +89,36 @@ const MessageScreen = () => {
     });
   };
 
+  const handleCreateGroup = (groupData) => {
+    console.log('Nhóm mới được tạo:', groupData);
+    // Here you would typically call an API to create the group
+    // Then add the new group to your discussions list
+    setGroupModalVisible(false);
+  };
+
   const filteredDiscussions = discussions.filter(discussion =>
     discussion.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     discussion.lastMessage.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
-    <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
-      <SafeAreaView style={styles.safeArea}>
+    <View style={styles.safeArea}>
+      <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Tin nhắn</Text>
-          <View style={styles.headerActions}>
-            <TouchableOpacity
-              style={styles.searchButton}
-              onPress={() => {
-                Haptics.selectionAsync();
-                // Focus search input if needed
-              }}
-            >
-              <Feather name="search" size={22} color="#59CBE8" />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.newButton}
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                // Handle new message action
-              }}
-            >
-              <Ionicons name="add" size={24} color="white" />
-            </TouchableOpacity>
+          <View style={styles.headerWrapper}>
+            <Text style={styles.headerTitle}>Tin nhắn</Text>
+            <View style={styles.headerActions}>
+              <TouchableOpacity
+                style={styles.newButton}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                  setGroupModalVisible(true);
+                }}
+              >
+                <Ionicons name="add" size={24} color="white" />
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
 
@@ -184,8 +194,16 @@ const MessageScreen = () => {
             </TouchableOpacity>
           ))}
         </ScrollView>
-      </SafeAreaView>
-    </Animated.View>
+
+        {/* Group Creation Modal */}
+        <GroupCreateModal
+          visible={groupModalVisible}
+          onClose={() => setGroupModalVisible(false)}
+          users={users}
+          onCreateGroup={handleCreateGroup}
+        />
+      </Animated.View>
+    </View>
   );
 };
 
@@ -198,11 +216,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: Platform.OS === 'ios' ? 10 : 20,
+    paddingTop: Platform.OS === 'ios' ? 16 : 30,
     paddingBottom: 16,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
@@ -213,18 +228,20 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 3,
   },
+  headerWrapper: {
+    marginTop: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
   headerTitle: {
-    fontSize: 22,
-    fontWeight: '700',
+    fontSize: 20,
+    fontWeight: '600',
     color: '#111827',
   },
   headerActions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 16,
-  },
-  searchButton: {
-    padding: 4,
   },
   newButton: {
     width: 36,

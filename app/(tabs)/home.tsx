@@ -12,13 +12,10 @@ import {
   Animated,
   Easing
 } from 'react-native';
-import SearchField from '@/components/SearchField';
-import Quote from '@/components/Quote';
-import NotificationButton from '@/components/NotificationButton';
+
 import HomeProfile from '@/components/HomeProfile';
 import { quotes, features } from '@/constants';
-import FeatureItem from '@/components/FeatureItem';
-import NewsItem from '@/components/NewsItem';
+
 import FooterHome from '@/components/FooterHome';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../hooks/useAuth';
@@ -26,6 +23,12 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../store/store';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useNewsletter } from '../hooks/useNewsletter';
+import FeatureItem from '@/components/home/FeatureItem';
+import NewsItem from '@/components/home/NewsItem';
+import NotificationButton from '@/components/home/NotificationButton';
+import Quote from '@/components/home/Quote';
+import SearchField from '@/components/home/SearchField';
 
 export default function Home() {
   useAuth();
@@ -35,40 +38,8 @@ export default function Home() {
   const [isQuoteLoading, setIsQuoteLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const fadeAnim = new Animated.Value(0);
+  const { newsletters, error } = useNewsletter();
 
-  // Sample news data
-  const newsData = [
-    {
-      id: '1',
-      title: 'Hội thảo giáo dục 4.0',
-      date: '16/05/2023',
-      time: '09:32',
-      image: require('@/assets/images/avatar.png'),
-      content: 'Trường sẽ tổ chức hội thảo về giáo dục 4.0 vào ngày 20/05...',
-      author: 'Ban giám hiệu',
-      category: 'Sự kiện'
-    },
-    {
-      id: '2',
-      title: 'Lễ tổng kết năm học',
-      date: '18/05/2023',
-      time: '14:00',
-      image: require('@/assets/images/avatar.png'),
-      content: 'Lễ tổng kết năm học 2022-2023 sẽ được tổ chức trọng thể...',
-      author: 'Văn phòng nhà trường',
-      category: 'Thông báo'
-    },
-    {
-      id: '3',
-      title: 'Thi học kỳ II',
-      date: '22/05/2023',
-      time: '07:30',
-      image: require('@/assets/images/avatar.png'),
-      content: 'Lịch thi học kỳ II sẽ bắt đầu từ ngày 25/05...',
-      author: 'Phòng đào tạo',
-      category: 'Lịch học'
-    }
-  ];
 
   useEffect(() => {
     Animated.timing(fadeAnim, {
@@ -81,37 +52,37 @@ export default function Home() {
 
   const handleFeaturePress = (label: string) => {
     const routes: Record<string, string> = {
-      'Lớp học': '/stack/class',
-      'Lịch thi': '/stack/examSchedule',
-      'Xin nghỉ': '/stack/leaveofabsence',
-      'Vi phạm': '/stack/violate',
-      'TKB': '/stack/timetable',
-      'Tất cả': '/stack/allFeatures'
+      'Lớp học': '/(stack)/class',
+      'Lịch thi': '/(stack)/examSchedule',
+      'Xin nghỉ': '/(stack)/leaveofabsence',
+      'Vi phạm': '/(stack)/violate',
+      'TKB': '/(stack)/timetable',
+      'Tất cả': '/(stack)/allFeatures'
     };
 
     if (routes[label]) {
-      router.push(routes[label] as "/stack/class" | "/stack/examSchedule" | "/stack/leaveofabsence" | "/stack/violate" | "/stack/timetable" | "/stack/allFeatures");
+      router.push(routes[label] as "/(stack)/class" | "/(stack)/examSchedule" | "/(stack)/leaveofabsence" | "/(stack)/violate" | "/(stack)/timetable" | "/(stack)/allFeatures");
     } else {
       console.log('Unknown feature:', label);
     }
   };
 
+
   const handleNewsPress = (newsItem: any) => {
     router.push({
-      pathname: '/stack/detail-new',
+      pathname: '/(stack)/detail-new',
       params: {
-        ...newsItem,
-        image: JSON.stringify(newsItem.image)
-      }
+        id: newsItem.id,
+      },
     });
   };
 
   const handleViewAllNews = () => {
     router.push({
-      pathname: '/stack/all-new',
+      pathname: '/(stack)/all-new',
       params: {
-        newsData: JSON.stringify([...newsData, ...newsData]) // Duplicate for demo
-      }
+        newsData: JSON.stringify(newsletters),
+      },
     });
   };
 
@@ -145,7 +116,7 @@ export default function Home() {
 
 
   return (
-    <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
+    <Animated.View style={[styles.container]}>
       <ScrollView
         contentContainerStyle={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
@@ -218,29 +189,33 @@ export default function Home() {
               </TouchableOpacity>
             </View>
 
-            <FlatList
-              data={newsData}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.newsList}
-              keyExtractor={(item) => item.id}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  onPress={() => handleNewsPress(item)}
-                  style={styles.newsCard}
-                  activeOpacity={0.8}
-                >
-                  <NewsItem
-                    title={item.title}
-                    date={item.date}
-                    time={item.time}
-                    image={item.image}
-                    category={item.category}
-                  />
-                </TouchableOpacity>
-              )}
-            />
+            {newsletters.length === 0 ? (
+              <ActivityIndicator size="large" color="#3b82f6" />
+            ) : error ? (
+              <Text style={{ color: 'red' }}>{error}</Text>
+            ) : (
+              <FlatList
+                data={newsletters}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.newsList}
+                keyExtractor={(item) => item.id}
+                renderItem={({ item }) => (
+                  <View style={styles.newsCard}>
+                    <NewsItem
+                      title={item.title}
+                      excerpt={item.excerpt}
+                      category={item.category}
+                      createdAt={item.createdAt}
+                      image={item.thumbnailUrl}
+                      onPress={() => handleNewsPress(item)}
+                    />
+                  </View>
+                )}
+              />
+            )}
           </View>
+
 
           {/* Upcoming Events */}
           <View style={styles.eventsContainer}>
@@ -396,8 +371,6 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
   newsCard: {
-    width: 280,
-    marginRight: 16,
     borderRadius: 12,
     overflow: 'hidden',
   },

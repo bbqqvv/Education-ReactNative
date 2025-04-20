@@ -15,7 +15,7 @@ export type NewsletterResponse = {
     id: string;
     title: string;
     content: string;
-    contentImages: string[];  // URLs or paths of images
+    contentImages?: string[];  // URLs or paths of images
     excerpt: string;
     author: string;
     category: string;
