@@ -5,7 +5,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView,
   StatusBar,
   Platform,
   Animated,
@@ -243,7 +242,7 @@ const LeaveList = () => {
   }, [activeStatus]);
 
   const handleBack = () => router.back();
-  const handleCreateLeave = () => router.push('/stack/leaveform');
+  const handleCreateLeave = () => router.push('/(stack)/leaveform');
 
   return (
     <View style={styles.container}>

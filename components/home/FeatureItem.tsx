@@ -1,9 +1,15 @@
 import React from "react";
 import { View, TouchableOpacity, Image, Text, StyleSheet } from "react-native";
 
-const FeatureItem = ({ icon, label }) => {
+interface FeatureItemProps {
+  icon: any;
+  label: string;
+  onPress: () => void;
+}
+
+const FeatureItem: React.FC<FeatureItemProps> = ({ icon, label, onPress }) => {
   return (
-    <TouchableOpacity>
+    <TouchableOpacity onPress={onPress}>
       <View style={styles.container}>
         <View style={styles.borderFeatures}>
           <Image source={icon} style={styles.icon} resizeMode="contain" />
@@ -37,7 +43,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontSize: 14,
     marginTop: 4,
-    fontWeight: "600", 
+    fontWeight: "600",
   },
 });
 

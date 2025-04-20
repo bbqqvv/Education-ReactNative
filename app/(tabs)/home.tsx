@@ -160,7 +160,7 @@ export default function Home() {
                   key={`feature-${index}`}
                   icon={feature.icon}
                   label={feature.label}
-                  onPress={() => handleFeaturePress(feature.label)}
+                  onPress={() => handleFeaturePress(feature.label)} // Truyền onPress
                 />
               ))}
             </View>

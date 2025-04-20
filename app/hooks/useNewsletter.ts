@@ -7,22 +7,50 @@ export const useNewsletter = (id?: string) => {
   const [newsletter, setNewsletter] = useState<NewsletterResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState<boolean>(false);
+
+  const fetchNewsletters = async () => {
+    try {
+      setLoading(true);
+      const response = await NewsletterApi.getAllNewsletters();
+      setNewsletters(response.data?.items || []);
+      setError(null);
+    } catch (err: any) {
+      setError(err.message || 'Không thể lấy danh sách bản tin');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchNewsletterDetail = async (newsletterId: string) => {
+    try {
+      setLoading(true);
+      const response = await NewsletterApi.getNewsletterById(newsletterId);
+      setNewsletter(response.data || null);
+      setError(null);
+    } catch (err: any) {
+      setError(err.message || 'Không thể lấy chi tiết bản tin');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const refreshNewsletters = async () => {
+    try {
+      setRefreshing(true);
+      const response = await NewsletterApi.getAllNewsletters();
+      setNewsletters(response.data?.items || []);
+      setError(null);
+    } catch (err: any) {
+      setError(err.message || 'Không thể làm mới danh sách bản tin');
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   // Fetch all newsletters
   useEffect(() => {
     if (!id) {
-      const fetchNewsletters = async () => {
-        try {
-          setLoading(true);
-          const response = await NewsletterApi.getAllNewsletters();
-          setNewsletters(response.data?.items || []);
-        } catch (err: any) {
-          setError(err.message || 'Không thể lấy danh sách bản tin');
-        } finally {
-          setLoading(false);
-        }
-      };
-
       fetchNewsletters();
     }
   }, [id]);
@@ -30,19 +58,7 @@ export const useNewsletter = (id?: string) => {
   // Fetch detail if id is provided
   useEffect(() => {
     if (id) {
-      const fetchNewsletterDetail = async () => {
-        try {
-          setLoading(true);
-          const response = await NewsletterApi.getNewsletterById(id);
-          setNewsletter(response.data || null);
-        } catch (err: any) {
-          setError(err.message || 'Không thể lấy chi tiết bản tin');
-        } finally {
-          setLoading(false);
-        }
-      };
-
-      fetchNewsletterDetail();
+      fetchNewsletterDetail(id);
     }
   }, [id]);
 
@@ -51,5 +67,7 @@ export const useNewsletter = (id?: string) => {
     newsletter,
     loading,
     error,
+    refreshing,
+    refreshNewsletters,
   };
 };

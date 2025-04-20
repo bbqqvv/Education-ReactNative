@@ -15,9 +15,8 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import NewsItem from '@/components/home/NewsItem';
 import { useNewsletter } from '../hooks/useNewsletter';
-import { NewsletterLikeResponse, NewsletterResponse } from '../api/newsletter/newsletter.type';
+import { NewsletterResponse } from '../api/newsletter/newsletter.type';
 
-const { width } = Dimensions.get('window');
 const HEADER_HEIGHT = Platform.OS === 'ios' ? 100 : 80;
 
 const AllNewsScreen = () => {
