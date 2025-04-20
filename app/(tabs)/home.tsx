@@ -10,25 +10,23 @@ import {
   FlatList,
   RefreshControl,
   Animated,
-  Easing,
-} from "react-native";
-
-import HomeProfile from "@/components/HomeProfile";
-import { quotes, features } from "@/constants";
-
-import FooterHome from "@/components/FooterHome";
-import { useRouter } from "expo-router";
-import { useAuth } from "../hooks/useAuth";
-import { useSelector } from "react-redux";
-import { RootState } from "../store/store";
-import { LinearGradient } from "expo-linear-gradient";
-import { MaterialIcons } from "@expo/vector-icons";
-import { useNewsletter } from "../hooks/useNewsletter";
-import FeatureItem from "@/components/home/FeatureItem";
-import NewsItem from "@/components/home/NewsItem";
-import NotificationButton from "@/components/home/NotificationButton";
-import Quote from "@/components/home/Quote";
-import SearchField from "@/components/home/SearchField";
+  Easing
+} from 'react-native';
+import HomeProfile from '@/components/HomeProfile';
+import { quotes, features } from '@/constants';
+import FooterHome from '@/components/FooterHome';
+import { useRouter } from 'expo-router';
+import { useAuth } from '../hooks/useAuth';
+import { useSelector } from 'react-redux';
+import { RootState } from '../store/store';
+import { LinearGradient } from 'expo-linear-gradient';
+import { MaterialIcons } from '@expo/vector-icons';
+import { useNewsletter } from '../hooks/useNewsletter';
+import FeatureItem from '@/components/home/FeatureItem';
+import NewsItem from '@/components/home/NewsItem';
+import NotificationButton from '@/components/home/NotificationButton';
+import Quote from '@/components/home/Quote';
+import SearchField from '@/components/home/SearchField';
 
 export default function Home() {
   useAuth();
@@ -164,7 +162,7 @@ export default function Home() {
                   key={`feature-${index}`}
                   icon={feature.icon}
                   label={feature.label}
-                  onPress={() => handleFeaturePress(feature.label)} // Truyền onPress
+                  onPress={() => handleFeaturePress(feature.label)}
                 />
               ))}
             </View>

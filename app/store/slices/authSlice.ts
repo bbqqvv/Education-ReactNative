@@ -1,13 +1,9 @@
-import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import {
-  AuthenticationRequest,
-  JwtResponse,
-  UserResponse,
-} from "@/app/api/auth/auth.types";
-import * as SecureStore from "expo-secure-store";
-import { AuthApi } from "@/app/api/auth/auth.service";
-import { UserApi } from "@/app/api/user/user.service";
+
+import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import AsyncStorage from '@react-native-async-storage/async-storage';  // Thay SecureStore bằng AsyncStorage
+import { AuthenticationRequest, JwtResponse, UserResponse } from '@/app/api/auth/auth.types';
+import { AuthApi } from '@/app/api/auth/auth.service';
+import { UserApi } from '@/app/api/user/user.service';
 
 // Định nghĩa kiểu dữ liệu UserInfo và AuthState
 type UserInfo = {
@@ -32,23 +28,6 @@ const initialState: AuthState = {
   error: null,
 };
 
-// Đăng nhập
-export const loginUser = createAsyncThunk<
-  JwtResponse,
-  AuthenticationRequest,
-  { rejectValue: string }
->("auth/loginUser", async (data, thunkAPI) => {
-  try {
-    const response = await AuthApi.login(data);
-    await AsyncStorage.setItem("authToken", response.token);
-    console.log("Token:", response);
-    return response;
-  } catch (err) {
-    console.log("Login error:", err);
-    return thunkAPI.rejectWithValue("Đăng nhập thất bại");
-  }
-});
-
 // Lấy thông tin người dùng
 export const fetchUserInfo = createAsyncThunk<
   UserResponse,
@@ -70,12 +49,7 @@ export const fetchUserInfo = createAsyncThunk<
   }
 });
 
-// Đăng xuất
-export const logoutUser = createAsyncThunk("auth/logoutUser", async () => {
-  await AsyncStorage.removeItem("authToken");
-  await SecureStore.deleteItemAsync("authToken"); // 👈 Thêm dòng này
-  return true;
-});
+
 
 const authSlice = createSlice({
   name: "auth",
@@ -83,9 +57,6 @@ const authSlice = createSlice({
   reducers: {
     setToken: (state, action: PayloadAction<string | null>) => {
       state.token = action.payload;
-    },
-    setUser: (state, action: PayloadAction<UserInfo | null>) => {
-      state.user = action.payload;
     },
   },
   extraReducers: (builder) => {

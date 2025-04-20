@@ -1,5 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
   View,
@@ -9,28 +7,21 @@ import {
   FlatList,
   Animated,
   Easing,
+  ActivityIndicator,
   Platform,
   StatusBar,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
 import ViolationDetail from './violate-detail';
-
-type ViolationLevel = 'LOW' | 'MEDIUM' | 'HIGH';
-
-export type Violation = {
-  id: string;
-  studentCode: string;
-  fullName: string;
-  role: string;
-  description: string;
-  level: ViolationLevel;
-  createdAt: string;
-  createdBy: string;
-};
+import { useViolations } from '../hooks/useViolations';
+import { ViolationResponse, ViolationLevel } from '../api/violation/violation.type';
 
 const ViolationScreen = () => {
   const router = useRouter();
-  const [selectedViolation, setSelectedViolation] = useState<Violation | null>(null);
+  const { violations, loading, error } = useViolations();
+  const [selectedViolation, setSelectedViolation] = useState<ViolationResponse | null>(null);
   const fadeAnim = React.useRef(new Animated.Value(0)).current;
 
   React.useEffect(() => {
@@ -43,81 +34,27 @@ const ViolationScreen = () => {
   }, []);
 
   const handleBackPress = () => {
-    // Nếu đang ở màn danh sách vi phạm thì quay về tab home
     if (!selectedViolation) {
       router.push('/(tabs)/home');
     } else {
-      // Nếu đang ở màn chi tiết, chỉ quay lại danh sách
       setSelectedViolation(null);
     }
   };
-  React.useEffect(() => {
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 300,
-      easing: Easing.out(Easing.quad),
-      useNativeDriver: true,
-    }).start();
-  }, []);
-
-
-  const violations: Violation[] = [
-    {
-      id: "123",
-      studentCode: "B21DCCN001",
-      fullName: "Bùi Quốc Văn",
-      role: "STUDENT",
-      description: "Vi phạm nội quy lớp học: Sử dụng điện thoại trong giờ học",
-      level: "HIGH",
-      createdAt: "2025-04-11T15:30:00",
-      createdBy: "Giáo viên Nguyễn Văn A"
-    },
-    {
-      id: "124",
-      studentCode: "B21DCCN002",
-      fullName: "Nguyễn Văn Thành",
-      role: "STUDENT",
-      description: "Đi học muộn 15 phút",
-      level: "MEDIUM",
-      createdAt: "2025-04-10T08:15:00",
-      createdBy: "Giáo viên Trần Thị B"
-    },
-    {
-      id: "125",
-      studentCode: "B21DCCN003",
-      fullName: "Đàm Phương Nam",
-      role: "STUDENT",
-      description: "Không làm bài tập về nhà",
-      level: "LOW",
-      createdAt: "2025-04-09T10:45:00",
-      createdBy: "Giáo viên Lê Văn C"
-    },
-    {
-      id: "126",
-      studentCode: "B21DCCN004",
-      fullName: "Trần Thị Minh Anh",
-      role: "STUDENT",
-      description: "Nói chuyện riêng nhiều lần trong giờ học",
-      level: "MEDIUM",
-      createdAt: "2025-04-08T14:20:00",
-      createdBy: "Giáo viên Phạm Thị D"
-    },
-  ];
 
   const getViolationLevelText = (level: ViolationLevel): string => {
     const levelMap: Record<ViolationLevel, string> = {
-      LOW: 'Nhẹ',
+      LIGHT: 'Nhẹ',
       MEDIUM: 'Trung bình',
-      HIGH: 'Nặng'
+      SEVERE: 'Nặng',
     };
     return levelMap[level] || level;
   };
 
   const getLevelColor = (level: ViolationLevel): string => {
     const colorMap: Record<ViolationLevel, string> = {
-      LOW: '#4CAF50',
+      LIGHT: '#4CAF50',
       MEDIUM: '#FFA000',
-      HIGH: '#F44336'
+      SEVERE: '#F44336',
     };
     return colorMap[level] || '#9E9E9E';
   };
@@ -131,7 +68,7 @@ const ViolationScreen = () => {
     return `${day}/${month}/${date.getFullYear()} ${hours}:${minutes}`;
   };
 
-  const renderViolationItem = ({ item }: { item: Violation }) => (
+  const renderViolationItem = ({ item }: { item: ViolationResponse }) => (
     <Animated.View style={{ opacity: fadeAnim }}>
       <TouchableOpacity
         onPress={() => setSelectedViolation(item)}
@@ -141,7 +78,7 @@ const ViolationScreen = () => {
         <View style={styles.cardHeader}>
           <View style={styles.studentInfo}>
             <Text style={styles.cardName}>{item.fullName}</Text>
-            <Text style={styles.cardCode}>{item.studentCode}</Text>
+            <Text style={styles.cardCode}>{item.userCode}</Text>
           </View>
           <View style={[styles.levelBadge, { backgroundColor: getLevelColor(item.level) }]}>
             <Text style={styles.levelText}>{getViolationLevelText(item.level)}</Text>
@@ -159,6 +96,26 @@ const ViolationScreen = () => {
       </TouchableOpacity>
     </Animated.View>
   );
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#4A90E2" />
+        <Text>Đang tải danh sách vi phạm...</Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>{error}</Text>
+        <TouchableOpacity onPress={handleBackPress}>
+          <Text style={styles.backText}>Quay lại</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.container, selectedViolation && { backgroundColor: '#FFFFFF' }]}>
@@ -193,10 +150,7 @@ const ViolationScreen = () => {
           />
         </>
       ) : (
-        <ViolationDetail
-          violation={selectedViolation}
-          onBack={handleBackPress}
-        />
+        <ViolationDetail violation={selectedViolation} onBack={handleBackPress} />
       )}
     </View>
   );
@@ -236,6 +190,10 @@ const styles = StyleSheet.create({
   emptyState: { alignItems: 'center', justifyContent: 'center', paddingVertical: 40 },
   emptyText: { fontSize: 16, color: '#616161', marginTop: 16, fontWeight: '500' },
   emptySubText: { fontSize: 14, color: '#9E9E9E', marginTop: 4 },
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  errorContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 16 },
+  errorText: { fontSize: 16, color: '#F44336', marginBottom: 16, textAlign: 'center' },
+  backText: { fontSize: 14, color: '#4A90E2', textDecorationLine: 'underline' },
 });
 
 export default ViolationScreen;
