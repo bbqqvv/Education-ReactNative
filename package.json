@@ -44,6 +44,7 @@
     "expo-symbols": "~0.2.0",
     "expo-system-ui": "~4.0.6",
     "expo-web-browser": "~14.0.1",
+    "localforage": "^1.10.0",
     "lottie-ios": "^4.5.1",
     "lottie-react-native": "^7.2.2",
     "nativewind": "^4.1.23",

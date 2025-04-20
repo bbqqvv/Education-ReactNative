@@ -16,18 +16,14 @@ import * as Haptics from 'expo-haptics';
 import NewsItem from '@/components/home/NewsItem';
 import { useNewsletter } from '../hooks/useNewsletter';
 import { NewsletterResponse } from '../api/newsletter/newsletter.type';
-
 const HEADER_HEIGHT = Platform.OS === 'ios' ? 100 : 80;
-
 const AllNewsScreen = () => {
   const router = useRouter();
   const { newsletters, loading, error } = useNewsletter(); // Sử dụng hook để lấy dữ liệu
-
   const handleBack = () => {
     Haptics.selectionAsync();
     router.back();
   };
-
   const handleNewsPress = (newsItem: NewsletterResponse) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     router.push({
@@ -50,6 +46,7 @@ const AllNewsScreen = () => {
         category={item.category}
         createdAt={item.createdAt}
         image={item.thumbnailUrl}
+        onPress={() => handleNewsPress(item)}
       />
     </TouchableOpacity>
   );

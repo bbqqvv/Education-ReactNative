@@ -1,6 +1,6 @@
 import { API_BASE_URL, API_TIMEOUT } from '@/constants/api';
 import axios from 'axios';
-import * as SecureStore from 'expo-secure-store';
+import AsyncStorage from '@react-native-async-storage/async-storage';  // Thay SecureStore bằng AsyncStorage
 
 const apiClient = axios.create({
     baseURL: API_BASE_URL,
@@ -13,7 +13,7 @@ apiClient.interceptors.request.use(async (config) => {
 
     // Nếu URL không cần auth thì bỏ qua việc gắn token
     if (config.url && !noAuthUrls.includes(config.url)) {
-        const token = await SecureStore.getItemAsync('authToken');
+        const token = await AsyncStorage.getItem('authToken');  // Dùng AsyncStorage thay SecureStore
         console.log('Token:', token); // Log token nếu có
 
         if (token) {
@@ -23,6 +23,5 @@ apiClient.interceptors.request.use(async (config) => {
 
     return config;
 });
-
 
 export default apiClient;

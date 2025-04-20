@@ -21,7 +21,7 @@ export enum UserType {
 }
 
 export enum ViolationLevel {
-    LOW = 'LIGHT',
+    LIGHT = 'LIGHT',
     MEDIUM = 'MEDIUM',
-    HIGH = 'SEVERE'
+    SEVERE = 'SEVERE',
 }

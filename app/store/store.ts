@@ -11,7 +11,7 @@ const rootReducer = combineReducers({
 const persistConfig = {
   key: 'root',
   storage: AsyncStorage,
-  whitelist: ['auth'], // Chỉ persist auth (sau này thêm gì thì bỏ vào đây)
+  whitelist: ['auth'], 
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

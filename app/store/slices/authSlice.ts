@@ -1,7 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from '@react-native-async-storage/async-storage';  // Thay SecureStore bằng AsyncStorage
 import { AuthenticationRequest, JwtResponse, UserResponse } from '@/app/api/auth/auth.types';
-import * as SecureStore from 'expo-secure-store';
 import { AuthApi } from '@/app/api/auth/auth.service';
 import { UserApi } from '@/app/api/user/user.service';
 
@@ -34,7 +33,7 @@ export const loginUser = createAsyncThunk<JwtResponse, AuthenticationRequest, { 
     async (data, thunkAPI) => {
         try {
             const response = await AuthApi.login(data);
-            await AsyncStorage.setItem('authToken', response.token);
+            await AsyncStorage.setItem('authToken', response.token);  // Lưu token vào AsyncStorage
             console.log("Token:", response)
             return response;
         } catch (err) {
@@ -67,8 +66,7 @@ export const fetchUserInfo = createAsyncThunk<UserResponse, void, { rejectValue:
 
 // Đăng xuất
 export const logoutUser = createAsyncThunk('auth/logoutUser', async () => {
-    await AsyncStorage.removeItem('authToken');
-    await SecureStore.deleteItemAsync('authToken'); // 👈 Thêm dòng này
+    await AsyncStorage.removeItem('authToken');  // Xóa token từ AsyncStorage
     return true;
 });
 
@@ -119,10 +117,8 @@ const authSlice = createSlice({
                 state.loading = false;
                 state.token = null;
                 state.user = null;
-                AsyncStorage.removeItem('authToken');
-                SecureStore.deleteItemAsync('authToken'); // 👈 Xóa ở đây luôn cho chắc
+                AsyncStorage.removeItem('authToken');  // Xóa token nếu không lấy được user info
                 state.error = action.payload ?? 'Không thể lấy thông tin người dùng';
-                AsyncStorage.removeItem('authToken'); // Xóa token nếu không lấy được user info
             })
             // Đăng xuất
             .addCase(logoutUser.fulfilled, (state) => {
