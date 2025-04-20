@@ -9,24 +9,20 @@ const apiClient = axios.create({
 
 // Interceptor xử lý token
 apiClient.interceptors.request.use(async (config) => {
-    const token = await SecureStore.getItemAsync('authToken');
-    console.log('Token:', token); // Log token
+    const noAuthUrls = ['/auth/login', '/auth/register', '/auth/forgot-password', '/auth/verify-otp', '/auth/reset-password'];
 
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+    // Nếu URL không cần auth thì bỏ qua việc gắn token
+    if (config.url && !noAuthUrls.includes(config.url)) {
+        const token = await SecureStore.getItemAsync('authToken');
+        console.log('Token:', token); // Log token nếu có
+
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
     }
+
     return config;
 });
 
-// Interceptor xử lý lỗi toàn cụcs
-apiClient.interceptors.response.use(
-    (response) => response,
-    (error) => {
-        if (error.response?.status === 401) {
-            // Redirect về màn hình Login nếu hết hạn token
-        }
-        return Promise.reject(error);
-    }
-);
 
 export default apiClient;

@@ -241,7 +241,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#59CBE8',
+    backgroundColor: 'white',
     paddingTop: Platform.OS === 'ios' ? 50 : 30,
     paddingHorizontal: 16,
     paddingBottom: 16,
@@ -270,7 +270,7 @@ const styles = StyleSheet.create({
   headerText: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#fff',
+    color: 'black',
   },
   chatContainer: {
     flex: 1,
