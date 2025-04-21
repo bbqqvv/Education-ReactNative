@@ -5,19 +5,18 @@ import {
     ScrollView,
     TouchableOpacity,
     StyleSheet,
-    Image,
-    SafeAreaView,
     Platform,
     StatusBar,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
-type ViolationLevel = 'LOW' | 'MEDIUM' | 'HIGH';
+type ViolationLevel = 'LIGHT' | 'MEDIUM' | 'SEVERE';
 
 type Violation = {
     id: string;
-    studentCode: string;
+    userCode: string;
+    violationCode: string;
     fullName: string;
     role: string;
     description: string;
@@ -34,18 +33,18 @@ type Props = {
 const ViolationDetail: React.FC<Props> = ({ violation, onBack }) => {
     const getViolationLevelText = (level: ViolationLevel): string => {
         const levelMap: Record<ViolationLevel, string> = {
-            LOW: 'Nhẹ',
+            LIGHT: 'Nhẹ',
             MEDIUM: 'Trung bình',
-            HIGH: 'Nặng'
+            SEVERE: 'Nặng',
         };
         return levelMap[level] || level;
     };
 
     const getLevelColor = (level: ViolationLevel): string => {
         const colorMap: Record<ViolationLevel, string> = {
-            LOW: '#4CAF50',
+            LIGHT: '#4CAF50',
             MEDIUM: '#FFA000',
-            HIGH: '#F44336'
+            SEVERE: '#F44336',
         };
         return colorMap[level] || '#9E9E9E';
     };
@@ -54,9 +53,10 @@ const ViolationDetail: React.FC<Props> = ({ violation, onBack }) => {
         const date = new Date(dateString);
         const day = date.getDate().toString().padStart(2, '0');
         const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const year = date.getFullYear();
         const hours = date.getHours().toString().padStart(2, '0');
         const minutes = date.getMinutes().toString().padStart(2, '0');
-        return `${day}/${month}/${date.getFullYear()} ${hours}:${minutes}`;
+        return `${day}/${month}/${year} ${hours}:${minutes}`;
     };
 
     return (
@@ -79,18 +79,16 @@ const ViolationDetail: React.FC<Props> = ({ violation, onBack }) => {
                 <View style={styles.detailSection}>
                     <Text style={styles.sectionTitle}>Thông tin học sinh</Text>
                     <View style={styles.infoRow}>
-                        <View style={styles.infoLabelContainer}>
-                            <Ionicons name="id-card" size={16} color="#4A90E2" />
-                            <Text style={styles.infoLabel}>Mã sinh viên:</Text>
-                        </View>
-                        <Text style={styles.infoValue}>{violation.studentCode}</Text>
+                        <Text style={styles.infoLabel}>Mã sinh viên:</Text>
+                        <Text style={styles.infoValue}>{violation.userCode}</Text>
                     </View>
                     <View style={styles.infoRow}>
-                        <View style={styles.infoLabelContainer}>
-                            <Ionicons name="person" size={16} color="#4A90E2" />
-                            <Text style={styles.infoLabel}>Họ và tên:</Text>
-                        </View>
+                        <Text style={styles.infoLabel}>Họ và tên:</Text>
                         <Text style={styles.infoValue}>{violation.fullName}</Text>
+                    </View>
+                    <View style={styles.infoRow}>
+                        <Text style={styles.infoLabel}>Vai trò:</Text>
+                        <Text style={styles.infoValue}>{violation.role === 'STUDENT' ? 'Học sinh' : 'Giáo viên'}</Text>
                     </View>
                 </View>
 
@@ -98,26 +96,21 @@ const ViolationDetail: React.FC<Props> = ({ violation, onBack }) => {
                 <View style={styles.detailSection}>
                     <Text style={styles.sectionTitle}>Thông tin vi phạm</Text>
                     <View style={styles.infoRow}>
-                        <View style={styles.infoLabelContainer}>
-                            <Ionicons name="warning" size={16} color="#4A90E2" />
-                            <Text style={styles.infoLabel}>Mức độ:</Text>
-                        </View>
+                        <Text style={styles.infoLabel}>Mã vi phạm:</Text>
+                        <Text style={styles.infoValue}>{violation.violationCode}</Text>
+                    </View>
+                    <View style={styles.infoRow}>
+                        <Text style={styles.infoLabel}>Mức độ:</Text>
                         <View style={[styles.levelBadge, { backgroundColor: getLevelColor(violation.level) }]}>
                             <Text style={styles.levelText}>{getViolationLevelText(violation.level)}</Text>
                         </View>
                     </View>
                     <View style={styles.infoRow}>
-                        <View style={styles.infoLabelContainer}>
-                            <Ionicons name="calendar" size={16} color="#4A90E2" />
-                            <Text style={styles.infoLabel}>Ngày vi phạm:</Text>
-                        </View>
+                        <Text style={styles.infoLabel}>Ngày vi phạm:</Text>
                         <Text style={styles.infoValue}>{formatDate(violation.createdAt)}</Text>
                     </View>
                     <View style={styles.infoRow}>
-                        <View style={styles.infoLabelContainer}>
-                            <Ionicons name="person-circle" size={16} color="#4A90E2" />
-                            <Text style={styles.infoLabel}>Người ghi nhận:</Text>
-                        </View>
+                        <Text style={styles.infoLabel}>Người ghi nhận:</Text>
                         <Text style={styles.infoValue}>{violation.createdBy}</Text>
                     </View>
                 </View>
@@ -125,9 +118,7 @@ const ViolationDetail: React.FC<Props> = ({ violation, onBack }) => {
                 {/* Description */}
                 <View style={styles.detailSection}>
                     <Text style={styles.sectionTitle}>Mô tả chi tiết</Text>
-                    <View style={styles.descriptionBox}>
-                        <Text style={styles.descriptionText}>{violation.description}</Text>
-                    </View>
+                    <Text style={styles.descriptionText}>{violation.description}</Text>
                 </View>
             </ScrollView>
         </View>
@@ -146,7 +137,7 @@ const styles = StyleSheet.create({
     },
     detailHeaderTitle: { fontSize: 18, fontWeight: '600', color: 'white' },
     backButton: { padding: 4 },
-    detailContent: { padding: 16, paddingBottom: 40 },
+    detailContent: { padding: 16 },
     detailSection: {
         backgroundColor: '#FFFFFF',
         borderRadius: 12,
@@ -159,30 +150,17 @@ const styles = StyleSheet.create({
     infoRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'center',
         marginBottom: 12,
     },
-    infoLabelContainer: { flexDirection: 'row', alignItems: 'center', flex: 1 },
-    infoLabel: { fontSize: 14, color: '#616161', marginLeft: 8 },
-    infoValue: { fontSize: 14, fontWeight: '500', color: '#212121', textAlign: 'right', flex: 1 },
+    infoLabel: { fontSize: 14, color: '#616161' },
+    infoValue: { fontSize: 14, fontWeight: '500', color: '#212121' },
     levelBadge: {
         paddingHorizontal: 10,
         paddingVertical: 4,
         borderRadius: 12,
-        marginLeft: 8,
     },
     levelText: { fontSize: 12, fontWeight: '600', color: 'white' },
-    descriptionBox: { backgroundColor: '#FAFAFA', borderRadius: 8, padding: 12 },
     descriptionText: { fontSize: 14, lineHeight: 20, color: '#424242' },
-    footer: {
-        alignItems: 'center',
-        marginTop: 24,
-        paddingTop: 16,
-        borderTopWidth: 1,
-        borderTopColor: '#EEEEEE',
-    },
-    footerImage: { width: 80, height: 80, marginBottom: 8 },
-    footerText: { fontSize: 12, color: '#9E9E9E', textAlign: 'center' },
 });
 
 export default ViolationDetail;

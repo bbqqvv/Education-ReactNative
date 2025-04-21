@@ -5,12 +5,12 @@ import { Ionicons } from '@expo/vector-icons';
 
 const DetailScreen = () => {
   const router = useRouter();
+  const params = useLocalSearchParams();
+  const isTeacher = params.type === 'teacher';
+
   const handleBackPress = () => {
     router.push('/(stack)/class');
   };
-
-  const params = useLocalSearchParams();
-  const isTeacher = params.type === 'teacher';
 
   return (
     <View style={styles.container}>
@@ -22,7 +22,7 @@ const DetailScreen = () => {
         <View style={styles.avatarContainer}>
           <Ionicons name="person" size={60} color="#59CBE8" />
         </View>
-        <Text style={styles.name}>{params.name}</Text>
+        <Text style={styles.name}>{params.fullName}</Text>
         <Text style={styles.type}>{isTeacher ? 'Giáo viên' : 'Học sinh'}</Text>
       </View>
 
@@ -33,7 +33,7 @@ const DetailScreen = () => {
 
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>Ngày sinh:</Text>
-            <Text style={styles.infoValue}>{params.dob}</Text>
+            <Text style={styles.infoValue}>{params.dateOfBirth}</Text>
           </View>
 
           <View style={styles.infoRow}>

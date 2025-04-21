@@ -69,14 +69,14 @@ const RateAppScreen = () => {
               {rating === 0
                 ? "Chọn số sao đánh giá"
                 : rating === 1
-                ? "Rất không hài lòng"
-                : rating === 2
-                ? "Không hài lòng"
-                : rating === 3
-                ? "Bình thường"
-                : rating === 4
-                ? "Hài lòng"
-                : "Rất hài lòng"}
+                  ? "Rất không hài lòng"
+                  : rating === 2
+                    ? "Không hài lòng"
+                    : rating === 3
+                      ? "Bình thường"
+                      : rating === 4
+                        ? "Hài lòng"
+                        : "Rất hài lòng"}
             </Text>
           </View>
 

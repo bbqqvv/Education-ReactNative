@@ -114,7 +114,7 @@ export default function Layout() {
 
 const styles = StyleSheet.create({
   tabBar: {
-    position: 'absolute',
+    position: 'relative',
     backgroundColor: '#212121', // Màu nền đậm hơn
     borderRadius: 30,
     height: 70, // Chiều cao hợp lý

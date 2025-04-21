@@ -1,6 +1,7 @@
 // export const API_BASE_URL = 'http://10.50.131.248:8080/api';
 //   export const API_BASE_URL = 'http://localhost:8080/api';
-export const API_BASE_URL = "http://192.168.1.8:8081/api";
+// export const API_BASE_URL = "http://192.168.1.4:8080/api";
+export const API_BASE_URL = "http://10.60.128.97:8080/api";
 
 export const API_TIMEOUT = 15000;
 
@@ -13,13 +14,15 @@ export const API_ENDPOINTS = {
     RESET_PASSWORD: "/auth/reset-password",
   },
   USER: {
-    PROFILE: "/users/profile",
-    CHANGE_PASSWORD: "/users/change-password",
-    CLASSMATES: "/users/classmates",
-    CLASS_TEACHERS: "/users/class/teachers",
-    MY_CLASSES: "/users/my-classes",
-    CLASS: "/users/class",
-    CURRENT: "/users/current-user",
+    PROFILE: "/users/profile",                         // PUT - cập nhật thông tin cá nhân
+    CHANGE_PASSWORD: "/users/change-password",         // PUT - đổi mật khẩu
+    CLASSMATES: "/users/classmates",                   // GET - lấy bạn cùng lớp (student)
+    CLASS_TEACHERS: "/users/class/teachers",           // GET - lấy giáo viên dạy lớp của học sinh (student)
+    MY_CLASSES: "/users/my-classes",                   // GET - lấy danh sách lớp giáo viên đang dạy (teacher)
+    CLASS_STUDENTS: (className: string) => `/users/class/${className}/students`,  // GET - lấy danh sách học sinh của lớp cụ thể (teacher)
+    CURRENT: "/users/current-user",                    // GET - lấy thông tin người dùng hiện tại
+    GET_ALL: "/users",                                 // GET - lấy tất cả users (admin)
+    DELETE: (id: string) => `/users/${id}`,            // DELETE - xóa user theo ID (admin)
   },
   QUOTE: {
     ADD_OR_UPDATE: "/quotes/add-or-update",
@@ -66,10 +69,10 @@ export const API_ENDPOINTS = {
   },
   LEAVE_REQUESTS: {
     GET_ALL: "/leave-requests",
-    GET_MY_REQUESTS: "/leave-requests/my", // Thêm endpoint mới
-    GET_BY_ID: (id: string) => `/leave-requests/${id}`, // Sửa thành function để truyền id
+    GET_MY_REQUESTS: "/leave-requests/my",
+    GET_BY_ID: (id: string) => `/leave-requests/${id}`, 
     CREATE: "/leave-requests",
-    UPDATE_STATUS: (id: string) => `/leave-requests/${id}/status`, // Sửa theo endpoint thực tế
-    DELETE: (id: string) => `/leave-requests/${id}`, // Sửa thành function
+    UPDATE_STATUS: (id: string) => `/leave-requests/${id}/status`,
+    DELETE: (id: string) => `/leave-requests/${id}`, 
   },
 };
