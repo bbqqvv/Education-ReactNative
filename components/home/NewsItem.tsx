@@ -54,6 +54,7 @@ const NewsItem: React.FC<NewsItemProps> = ({
     }
   };
 
+  
   const { date, time } = formatDateTime(createdAt);
 
   return (
@@ -94,6 +95,7 @@ const NewsItem: React.FC<NewsItemProps> = ({
     </TouchableOpacity>
   );
 };
+
 
 const styles = StyleSheet.create({
   container: {

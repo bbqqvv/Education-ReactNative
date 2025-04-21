@@ -16,7 +16,10 @@ export const useNewsletter = (id?: string) => {
     try {
       setLoading(true);
       const response = await NewsletterApi.getAllNewsletters();
-      setNewsletters(response.data?.items || []);
+      const sortedNewsletters = response.data?.items.sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+      setNewsletters(sortedNewsletters || []);
       setError(null);
     } catch (err: any) {
       setError(err.message || 'Không thể lấy danh sách bản tin');
@@ -44,7 +47,10 @@ export const useNewsletter = (id?: string) => {
     try {
       setRefreshing(true);
       const response = await NewsletterApi.getAllNewsletters();
-      setNewsletters(response.data?.items || []);
+      const sortedNewsletters = response.data?.items.sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+      setNewsletters(sortedNewsletters || []);
       setError(null);
     } catch (err: any) {
       setError(err.message || 'Không thể làm mới danh sách bản tin');

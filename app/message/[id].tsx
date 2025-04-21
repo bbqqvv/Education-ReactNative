@@ -231,8 +231,7 @@ const MessageDetailScreen = () => {
 
       {/* Input Area */}
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={90}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'position'}
       >
         <View style={styles.inputArea}>
           <TouchableOpacity

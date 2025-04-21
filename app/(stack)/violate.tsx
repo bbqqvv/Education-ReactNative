@@ -20,8 +20,8 @@ import { ViolationResponse, ViolationLevel } from '../api/violation/violation.ty
 
 const ViolationScreen = () => {
   const router = useRouter();
-  const { violations, loading, error } = useViolations();
-  const [selectedViolation, setSelectedViolation] = useState<ViolationResponse | null>(null);
+  const { violations, loading, error } = useViolations(); // Lấy danh sách vi phạm từ hook
+  const [selectedViolation, setSelectedViolation] = useState<ViolationResponse | null>(null); // Lưu vi phạm được chọn
   const fadeAnim = React.useRef(new Animated.Value(0)).current;
 
   React.useEffect(() => {
@@ -35,9 +35,9 @@ const ViolationScreen = () => {
 
   const handleBackPress = () => {
     if (!selectedViolation) {
-      router.push('/(tabs)/home');
+      router.push('/(tabs)/home'); // Quay lại màn hình chính
     } else {
-      setSelectedViolation(null);
+      setSelectedViolation(null); // Quay lại danh sách vi phạm
     }
   };
 
@@ -71,7 +71,7 @@ const ViolationScreen = () => {
   const renderViolationItem = ({ item }: { item: ViolationResponse }) => (
     <Animated.View style={{ opacity: fadeAnim }}>
       <TouchableOpacity
-        onPress={() => setSelectedViolation(item)}
+        onPress={() => setSelectedViolation(item)} // Chọn vi phạm để hiển thị chi tiết
         style={styles.violationCard}
         activeOpacity={0.8}
       >
@@ -150,7 +150,7 @@ const ViolationScreen = () => {
           />
         </>
       ) : (
-        <ViolationDetail violation={selectedViolation} onBack={handleBackPress} />
+        <ViolationDetail violation={selectedViolation} onBack={handleBackPress} /> // Hiển thị chi tiết vi phạm
       )}
     </View>
   );
