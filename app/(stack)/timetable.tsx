@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -7,14 +7,15 @@ import {
   TouchableOpacity,
   SafeAreaView,
   StatusBar,
+  Alert,
   Platform,
-  Animated,
-  Easing
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Calendar, LocaleConfig } from 'react-native-calendars';
 import { LinearGradient } from 'expo-linear-gradient';
+import { TimeTableApi } from '@/app/api/time-table/time-table.service';
+import { TimeTableResponse, WeeklyScheduleResponse } from '@/app/api/time-table/time-table.type';
 
 // Vietnamese locale configuration
 LocaleConfig.locales['vi'] = {
@@ -35,80 +36,109 @@ LocaleConfig.defaultLocale = 'vi';
 const Timetable = () => {
   const router = useRouter();
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
-  const fadeAnim = new Animated.Value(0);
+  const [weeklySchedule, setWeeklySchedule] = useState<WeeklyScheduleResponse | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  React.useEffect(() => {
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 500,
-      easing: Easing.out(Easing.quad),
-      useNativeDriver: true,
-    }).start();
-  }, []);
+  const getWeekStartDate = (date: string): string => {
+    const selected = new Date(date);
+    const day = selected.getDay();
+    const diff = selected.getDate() - day + (day === 0 ? -6 : 1); // Adjust for Monday start
+    return new Date(selected.setDate(diff)).toISOString().split('T')[0];
+  };
+
+  const weekStart = useMemo(() => getWeekStartDate(selectedDate), [selectedDate]);
+
+  useEffect(() => {
+    fetchWeeklySchedule();
+  }, [weekStart]);
+
+  const fetchWeeklySchedule = async () => {
+    try {
+      setLoading(true);
+      const className = '22itb'; // TODO: Fetch dynamically (e.g., from /api/users/current)
+      const response = await TimeTableApi.getWeeklySchedule(className, weekStart);
+      console.log('Weekly schedule response:', JSON.stringify(response, null, 2));
+      if (response.success && response.data) {
+        setWeeklySchedule(response.data);
+        console.log('Set weekly schedule:', JSON.stringify(response.data, null, 2));
+      } else {
+        Alert.alert('Lỗi', response.message || 'Không thể tải thời khóa biểu');
+      }
+    } catch (error: any) {
+      console.log('Error fetching weekly schedule:', error);
+      Alert.alert('Lỗi', 'Đã xảy ra lỗi khi tải thời khóa biểu');
+    } finally {
+      setLoading(false);
+      console.log('Loading state set to:', false);
+    }
+  };
+
+  const getSubjectsForSelectedDate = (): TimeTableResponse[] => {
+    if (!weeklySchedule) {
+      console.log('No weekly schedule available');
+      return [];
+    }
+
+    const normalizedSelectedDate = selectedDate.split('T')[0];
+    console.log('Selected date (normalized):', normalizedSelectedDate);
+    console.log('Schedule dates:', weeklySchedule.schedule.map(day => day.date));
+
+    const dailySchedule = weeklySchedule.schedule.find(
+      (day) => day.date === normalizedSelectedDate
+    );
+
+    console.log('Daily schedule for', normalizedSelectedDate, ':', dailySchedule);
+
+    if (!dailySchedule) {
+      console.log('No daily schedule found for', normalizedSelectedDate);
+      return [];
+    }
+
+    console.log('Lessons for', normalizedSelectedDate, ':', dailySchedule.lessons);
+    return dailySchedule.lessons.sort((a, b) => a.period - b.period);
+  };
+
+  // Log rendering details
+  useEffect(() => {
+    const lessons = getSubjectsForSelectedDate();
+    console.log('Rendering with lessons:', lessons);
+    console.log('Loading state:', loading);
+  }, [selectedDate, weeklySchedule, loading]);
 
   const handleBack = () => {
     router.back();
   };
 
-  // Sample timetable data
-  const timetableData = {
-    '2025-04-14': [
-      { id: '1', subject: 'Toán', time: '07:30 - 09:00', room: 'P.101', type: 'Lý thuyết', teacher: 'Nguyễn Văn A' },
-      { id: '2', subject: 'Vật lý', time: '09:15 - 10:45', room: 'P.202', type: 'Thực hành', teacher: 'Trần Thị B' },
-    ],
-    '2025-04-15': [
-      { id: '3', subject: 'Ngữ văn', time: '07:30 - 09:00', room: 'P.103', type: 'Lý thuyết', teacher: 'Phạm Văn C' },
-      { id: '4', subject: 'Lịch sử', time: '09:15 - 10:45', room: 'P.204', type: 'Seminar', teacher: 'Lê Thị D' },
-    ],
-    '2025-04-16': [
-      { id: '5', subject: 'Hóa học', time: '07:30 - 09:00', room: 'Lab.1', type: 'Thí nghiệm', teacher: 'Hoàng Văn E' },
-      { id: '6', subject: 'Sinh học', time: '09:15 - 10:45', room: 'Lab.2', type: 'Thí nghiệm', teacher: 'Vũ Thị F' },
-    ],
-    '2025-04-17': [
-      { id: '7', subject: 'Toán', time: '07:30 - 09:00', room: 'P.101', type: 'Lý thuyết', teacher: 'Nguyễn Văn A' },
-      { id: '8', subject: 'Vật lý', time: '09:15 - 10:45', room: 'P.202', type: 'Bài tập', teacher: 'Trần Thị B' },
-    ],
-    '2025-04-18': [
-      { id: '9', subject: 'Ngữ văn', time: '07:30 - 09:00', room: 'P.103', type: 'Thảo luận', teacher: 'Phạm Văn C' },
-      { id: '10', subject: 'Lịch sử', time: '09:15 - 10:45', room: 'P.204', type: 'Lý thuyết', teacher: 'Lê Thị D' },
-    ],
-    '2025-04-19': [
-      { id: '11', subject: 'Hóa học', time: '07:30 - 09:00', room: 'Lab.1', type: 'Thí nghiệm', teacher: 'Hoàng Văn E' },
-      { id: '12', subject: 'Sinh học', time: '09:15 - 10:45', room: 'Lab.2', type: 'Thí nghiệm', teacher: 'Vũ Thị F' },
-    ],
-  };
-
-  const getSubjectsForSelectedDate = () => {
-    return timetableData[selectedDate] || [];
-  };
-
   // Mark dates with classes
-  const markedDates = {};
-  Object.keys(timetableData).forEach(date => {
-    markedDates[date] = {
-      marked: true,
-      dotColor: '#06b6d4',
-      activeOpacity: 0.8
-    };
-  });
-  markedDates[selectedDate] = {
+  const markedDates: { [key: string]: any } = {};
+  if (weeklySchedule) {
+    weeklySchedule.schedule.forEach((day) => {
+      if (day.lessons.length > 0) {
+        markedDates[day.date] = {
+          marked: true,
+          dotColor: '#06b6d4',
+          activeOpacity: 0.8,
+        };
+      }
+    });
+  }
+  markedDates[selectedDate.split('T')[0]] = {
     selected: true,
     selectedColor: '#06b6d4',
     selectedTextColor: '#fff',
-    marked: true,
-    dotColor: '#fff'
+    marked: markedDates[selectedDate.split('T')[0]]?.marked || false,
+    dotColor: '#fff',
   };
 
-  const getClassTypeColor = (type) => {
-    const colors = {
-      'Lý thuyết': '#3b82f6',
-      'Thực hành': '#10b981',
-      'Thí nghiệm': '#ef4444',
-      'Seminar': '#8b5cf6',
-      'Bài tập': '#f59e0b',
-      'Thảo luận': '#ec4899'
+  // Map period to time slot
+  const getTimeForPeriod = (period: number): string => {
+    const timeSlots = {
+      1: '07:30 - 09:00',
+      2: '09:15 - 10:45',
+      3: '13:00 - 14:30',
+      4: '14:45 - 16:15',
     };
-    return colors[type] || '#6b7280';
+    return timeSlots[period] || `${period}:00 - ${period + 1}:30`;
   };
 
   return (
@@ -130,7 +160,7 @@ const Timetable = () => {
           >
             <Ionicons name="arrow-back" size={24} color="#fff" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Thời Khóa Biểu</Text>
+          <Text style={styles.headerTitle}>Thời Khóa Biểu {weeklySchedule?.className || ''}</Text>
           <View style={styles.headerRight} />
         </View>
       </LinearGradient>
@@ -159,9 +189,9 @@ const Timetable = () => {
               week: {
                 marginTop: 5,
                 flexDirection: 'row',
-                justifyContent: 'space-around'
-              }
-            }
+                justifyContent: 'space-around',
+              },
+            },
           }}
         />
       </View>
@@ -178,57 +208,71 @@ const Timetable = () => {
               weekday: 'long',
               day: 'numeric',
               month: 'numeric',
-              year: 'numeric'
+              year: 'numeric',
             })}
           </Text>
         </View>
 
-        {getSubjectsForSelectedDate().length > 0 ? (
-          getSubjectsForSelectedDate().map((subject) => (
-            <Animated.View
-              key={subject.id}
-              style={[
-                styles.subjectCard,
-                { opacity: fadeAnim }
-              ]}
-            >
-              <View style={styles.subjectHeader}>
-                <Text style={styles.subjectTitle}>{subject.subject}</Text>
-                <View style={[
-                  styles.classTypeBadge,
-                  { backgroundColor: getClassTypeColor(subject.type) }
-                ]}>
-                  <Text style={styles.classTypeText}>{subject.type}</Text>
-                </View>
+        {(() => {
+          console.log('Render: Loading state:', loading);
+          if (loading) {
+            return (
+              <View style={styles.emptyState}>
+                <Ionicons name="hourglass-outline" size={48} color="#d1d5db" />
+                <Text style={styles.emptyText}>Đang tải thời khóa biểu...</Text>
               </View>
+            );
+          }
 
-              <View style={styles.subjectDetails}>
-                <View style={styles.detailRow}>
-                  <Ionicons name="time-outline" size={16} color="#6b7280" />
-                  <Text style={styles.detailText}>{subject.time}</Text>
-                </View>
-                <View style={styles.detailRow}>
-                  <Ionicons name="location-outline" size={16} color="#6b7280" />
-                  <Text style={styles.detailText}>{subject.room}</Text>
-                </View>
-                <View style={styles.detailRow}>
-                  <Ionicons name="person-outline" size={16} color="#6b7280" />
-                  <Text style={styles.detailText}>{subject.teacher}</Text>
-                </View>
+          const lessons = getSubjectsForSelectedDate();
+          console.log('Render: Lessons length:', lessons.length);
+          console.log('Render: Lessons content:', lessons);
+
+          if (lessons.length > 0) {
+            console.log('Render: Mapping lessons:', lessons);
+            return (
+              <View>
+                <Text style={styles.debugText}>Rendering {lessons.length} lesson(s)</Text>
+                {lessons.map((lesson: TimeTableResponse) => {
+                  console.log('Render: Lesson ID:', lesson.id);
+                  return (
+                    <View key={lesson.id} style={styles.subjectCard}>
+                      <View style={styles.subjectHeader}>
+                        <Text style={styles.subjectTitle}>{lesson.subject}</Text>
+                        <View style={styles.classTypeBadge}>
+                          <Text style={styles.classTypeText}>Tiết {lesson.period}</Text>
+                        </View>
+                      </View>
+                      <View style={styles.subjectDetails}>
+                        <View style={styles.detailRow}>
+                          <Ionicons name="time-outline" size={16} color="#6b7280" />
+                          <Text style={styles.detailText}>{getTimeForPeriod(lesson.period)}</Text>
+                        </View>
+                        <View style={styles.detailRow}>
+                          <Ionicons name="person-outline" size={16} color="#6b7280" />
+                          <Text style={styles.detailText}>{lesson.teacherName}</Text>
+                        </View>
+                      </View>
+                    </View>
+                  );
+                })}
               </View>
-            </Animated.View>
-          ))
-        ) : (
-          <View style={styles.emptyState}>
-            <Ionicons name="school-outline" size={48} color="#d1d5db" />
-            <Text style={styles.emptyText}>Không có lịch học trong ngày này</Text>
-          </View>
-        )}
+            );
+          }
 
-        {/* Download Button */}
+          return (
+            <View style={styles.emptyState}>
+              <Ionicons name="school-outline" size={48} color="#d1d5db" />
+              <Text style={styles.emptyText}>Không có lịch học trong ngày này</Text>
+            </View>
+          );
+        })()}
+
+        {/* Download Button (Placeholder) */}
         <TouchableOpacity
           style={styles.downloadButton}
           activeOpacity={0.8}
+          onPress={() => Alert.alert('Thông báo', 'Chức năng tải xuống đang được phát triển')}
         >
           <Ionicons name="download-outline" size={20} color="#fff" />
           <Text style={styles.downloadButtonText}>Tải xuống thời khóa biểu</Text>
@@ -247,8 +291,6 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 50,
     paddingBottom: 16,
     paddingHorizontal: 16,
-    // borderBottomLeftRadius: 20,
-    // borderBottomRightRadius: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
@@ -264,9 +306,9 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   headerTitle: {
-    color: "#fff",
+    color: '#fff',
     fontSize: 20,
-    fontWeight: "600",
+    fontWeight: '600',
     textAlign: 'center',
   },
   headerRight: {
@@ -324,6 +366,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   classTypeBadge: {
+    backgroundColor: '#3b82f6',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 4,
@@ -375,6 +418,12 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#fff',
     marginLeft: 8,
+  },
+  debugText: {
+    fontSize: 16,
+    color: '#ff0000',
+    textAlign: 'center',
+    marginBottom: 10,
   },
 });
 
