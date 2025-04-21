@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,50 +7,30 @@ import {
   TouchableOpacity,
   Image,
   TextInput,
-  SafeAreaView,
-  Platform,
   Animated,
-  StatusBar
+  ActivityIndicator,
+  StatusBar,
+  Platform
 } from 'react-native';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
-
-// Sample data with more realistic information
-const studentData = Array.from({ length: 6 }, (_, i) => ({
-  id: Math.random().toString(),
-  name: `Nguyễn Văn ${String.fromCharCode(65 + i)}`,
-  dob: `0${i + 1}/06/2004`,
-  gender: i % 2 === 0 ? 'Nam' : 'Nữ',
-  type: 'student',
-  email: `student${i + 1}@trancaovan.edu.vn`,
-  phone: `098765432${i}`,
-  address: `${i + 1}23 Đường ABC, Quận 1, TP.HCM`,
-  studentId: `STU2023${1000 + i}`
-}));
-
-const teacherData = Array.from({ length: 4 }, (_, i) => ({
-  id: Math.random().toString(),
-  name: `Giáo viên ${String.fromCharCode(65 + i)}`,
-  dob: `15/03/${1980 + i}`,
-  gender: i % 2 === 0 ? 'Nam' : 'Nữ',
-  type: 'teacher',
-  email: `teacher${i + 1}@trancaovan.edu.vn`,
-  phone: `098765432${i}`,
-  address: `${i + 1}56 Đường XYZ, Quận 3, TP.HCM`,
-  subject: ['Toán học', 'Ngữ văn', 'Vật lý', 'Hóa học'][i],
-  yearsOfExperience: 5 + i,
-  teacherId: `TCH2023${100 + i}`
-}));
+import { useUser } from '../hooks/useUser';
+import { UserResponse } from '../api/user/user.type';
 
 const Class = () => {
   const router = useRouter();
+  const { getClassmates, getTeachersForMyClass } = useUser();
+
   const [activeTab, setActiveTab] = useState<'student' | 'teacher'>('student');
   const [searchText, setSearchText] = useState('');
+  const [students, setStudents] = useState<any[]>([]);
+  const [teachers, setTeachers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
   const fadeAnim = new Animated.Value(0);
 
-  React.useEffect(() => {
+  useEffect(() => {
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 300,
@@ -58,22 +38,50 @@ const Class = () => {
     }).start();
   }, []);
 
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        if (activeTab === 'student') {
+          const data = await getClassmates();
+          console.log("Students data:", data); // 👈
+
+          setStudents(data);
+        } else {
+          const data = await getTeachersForMyClass();
+          console.log("Teachers data:", data); // 👈
+
+          setTeachers(data);
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [activeTab]);
+
   const handleBackPress = () => {
     Haptics.selectionAsync();
     router.push('/(tabs)/home');
   };
 
-  const handleItemPress = (item: any) => {
+  const handleItemPress = (item: UserResponse) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     router.push({
       pathname: '/(stack)/detail-class',
       params: {
-        ...item,
-        ...(item.type === 'teacher' ? {
-          subject: item.subject,
-          yearsOfExperience: item.yearsOfExperience.toString()
-        } : {})
-      }
+        fullName: item.fullName,
+        email: item.email,
+        dateOfBirth: item.profile?.dateOfBirth,
+        gender: item.profile?.gender,
+        role: item.role,
+        ...(item.role === 'ROLE_TEACHER' ? {
+          teachingClasses: Array.from(item.teachingClasses || []),
+        } : {}),
+      },
     });
   };
 
@@ -83,19 +91,20 @@ const Class = () => {
   };
 
   const filteredData = useMemo(() => {
-    const data = activeTab === 'student' ? studentData : teacherData;
-    return data.filter(item =>
-      item.name.toLowerCase().includes(searchText.toLowerCase()) ||
-      item.email.toLowerCase().includes(searchText.toLowerCase()) ||
-      (activeTab === 'student' && item.id.toLowerCase().includes(searchText.toLowerCase())) ||
-      (activeTab === 'teacher' && item.id.toLowerCase().includes(searchText.toLowerCase()))
+    const data = activeTab === 'student' ? students : teachers;
+    console.log("Raw Data:", data); // 👈 Kiểm tra dữ liệu trước khi lọc
+    const filtered = data.filter(item =>
+      item.fullName?.toLowerCase().includes(searchText.toLowerCase()) ||
+      item.email?.toLowerCase().includes(searchText.toLowerCase()) ||
+      item.userCode?.toLowerCase().includes(searchText.toLowerCase())
     );
-  }, [activeTab, searchText]);
+    console.log("Filtered Data:", filtered); // 👈 Kiểm tra dữ liệu đã lọc
+    return filtered;
+  }, [activeTab, searchText, students, teachers]);
 
   return (
-    <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
+<View style={styles.container}>
       <View style={styles.safeArea}>
-        {/* Header */}
         <LinearGradient
           colors={['#4A90E2', '#59CBE8']}
           start={{ x: 0, y: 0 }}
@@ -112,8 +121,6 @@ const Class = () => {
             </TouchableOpacity>
 
             <Text style={styles.headerTitle}>Lớp 12A1</Text>
-
-            {/* Để cân giữa tiêu đề nếu không có nút bên phải */}
             <View style={{ width: 24 }} />
           </View>
         </LinearGradient>
@@ -142,38 +149,21 @@ const Class = () => {
         {/* Tab Switch */}
         <View style={styles.tabContainer}>
           <TouchableOpacity
-            style={[
-              styles.tab,
-              activeTab === 'student' && styles.activeTab,
-            ]}
+            style={[styles.tab, activeTab === 'student' && styles.activeTab]}
             onPress={() => handleTabChange('student')}
             activeOpacity={0.7}
           >
-            <Text
-              style={[
-                styles.tabText,
-                activeTab === 'student' && styles.activeTabText,
-              ]}
-            >
-              Học sinh ({studentData.length})
+            <Text style={[styles.tabText, activeTab === 'student' && styles.activeTabText]}>
+              Học sinh ({students.length})
             </Text>
           </TouchableOpacity>
-
           <TouchableOpacity
-            style={[
-              styles.tab,
-              activeTab === 'teacher' && styles.activeTab,
-            ]}
+            style={[styles.tab, activeTab === 'teacher' && styles.activeTab]}
             onPress={() => handleTabChange('teacher')}
             activeOpacity={0.7}
           >
-            <Text
-              style={[
-                styles.tabText,
-                activeTab === 'teacher' && styles.activeTabText,
-              ]}
-            >
-              Giáo viên ({teacherData.length})
+            <Text style={[styles.tabText, activeTab === 'teacher' && styles.activeTabText]}>
+              Giáo viên ({teachers.length})
             </Text>
           </TouchableOpacity>
         </View>
@@ -183,7 +173,11 @@ const Class = () => {
           contentContainerStyle={styles.listContainer}
           showsVerticalScrollIndicator={false}
         >
-          {filteredData.length === 0 ? (
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#4A90E2" />
+            </View>
+          ) : filteredData.length === 0 ? (
             <View style={styles.emptyState}>
               <MaterialIcons name="search-off" size={48} color="#D1D5DB" />
               <Text style={styles.emptyText}>Không tìm thấy kết quả</Text>
@@ -202,20 +196,15 @@ const Class = () => {
                 />
                 <View style={styles.info}>
                   <View style={styles.nameRow}>
-                    <Text style={styles.name} numberOfLines={1}>{item.name}</Text>
-                    {activeTab === 'student' && (
-                      <Text style={styles.idText}>{item.id}</Text>
-                    )}
-                    {activeTab === 'teacher' && (
-                      <Text style={styles.idText}>{item.id}</Text>
-                    )}
+                    <Text style={styles.name} numberOfLines={1}>{item.fullName}</Text>
+                    <Text style={styles.idText}>{item.userCode}</Text>
                   </View>
                   <Text style={styles.detailText}>
-                    {item.gender} • {item.dob}
+                    {item.profile?.gender || 'Không xác định'} • {item.profile?.dateOfBirth || 'Không xác định'}
                   </Text>
                   {activeTab === 'teacher' && (
                     <Text style={styles.subjectText}>
-                      {item.subject} • {item.yearsOfExperience} năm kinh nghiệm
+                      {Array.from(item.teachingClasses || []).join(', ')}
                     </Text>
                   )}
                   {activeTab === 'student' && (
@@ -224,18 +213,13 @@ const Class = () => {
                     </Text>
                   )}
                 </View>
-                <Ionicons
-                  name="chevron-forward"
-                  size={20}
-                  color="#D1D5DB"
-                  style={styles.chevronIcon}
-                />
+                <Ionicons name="chevron-forward" size={20} color="#D1D5DB" style={styles.chevronIcon} />
               </TouchableOpacity>
             ))
           )}
         </ScrollView>
       </View>
-    </Animated.View>
+    </View>
   );
 };
 
@@ -341,6 +325,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 16,
     paddingBottom: 30,
+    flexGrow: 1, // Đảm bảo danh sách chiếm toàn bộ không gian
   },
   card: {
     flexDirection: 'row',
@@ -413,6 +398,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#9CA3AF',
     marginTop: 16,
+  },
+  loadingContainer: {
+    marginTop: 40,
+    alignItems: 'center',
   },
 });
 

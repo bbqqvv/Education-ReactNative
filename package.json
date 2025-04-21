@@ -67,7 +67,9 @@
     "react-redux": "^9.2.0",
     "redux-persist": "^6.0.0",
     "sockjs-client": "^1.6.1",
-    "expo-clipboard": "~7.0.1"
+    "expo-clipboard": "~7.0.1",
+    "expo-sharing": "~13.0.1",
+    "expo-file-system": "~18.0.12"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

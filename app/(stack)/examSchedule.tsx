@@ -9,88 +9,21 @@ import {
   StatusBar,
   Animated,
   Easing,
-  Platform
+  Platform,
+  ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { LinearGradient } from 'expo-linear-gradient';
-
-const examSchedule = [
-  {
-    id: '1',
-    day: "11",
-    month: "JAN",
-    subject: "Science",
-    weekday: "Monday",
-    time: "09:00 AM",
-    location: "Room 301",
-    type: "Midterm"
-  },
-  {
-    id: '2',
-    day: "13",
-    month: "JAN",
-    subject: "English",
-    weekday: "Wednesday",
-    time: "09:00 AM",
-    location: "Room 205",
-    type: "Quiz"
-  },
-  {
-    id: '3',
-    day: "15",
-    month: "JAN",
-    subject: "Hindi",
-    weekday: "Friday",
-    time: "09:00 AM",
-    location: "Room 102",
-    type: "Final"
-  },
-  {
-    id: '4',
-    day: "18",
-    month: "JAN",
-    subject: "Math",
-    weekday: "Monday",
-    time: "09:00 AM",
-    location: "Room 401",
-    type: "Midterm"
-  },
-  {
-    id: '5',
-    day: "20",
-    month: "JAN",
-    subject: "Social Study",
-    weekday: "Wednesday",
-    time: "09:00 AM",
-    location: "Room 303",
-    type: "Quiz"
-  },
-  {
-    id: '6',
-    day: "22",
-    month: "JAN",
-    subject: "Drawing",
-    weekday: "Friday",
-    time: "09:00 AM",
-    location: "Art Room",
-    type: "Practical"
-  },
-  {
-    id: '7',
-    day: "25",
-    month: "JAN",
-    subject: "Computer",
-    weekday: "Monday",
-    time: "09:00 AM",
-    location: "Lab 2",
-    type: "Final"
-  },
-];
+import { LinearGradient } from "expo-linear-gradient";
+import { useExamSchedule } from "../hooks/useExamSchedule";
+import { ExamScheduleResponse } from "../api/exam-schedule/exam-schedule.type";
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
 
 export default function ClassScreen() {
   const router = useRouter();
   const fadeAnim = React.useRef(new Animated.Value(0)).current;
+  const { examSchedules, loading, error } = useExamSchedule();
 
   React.useEffect(() => {
     Animated.timing(fadeAnim, {
@@ -101,24 +34,28 @@ export default function ClassScreen() {
     }).start();
   }, [fadeAnim]);
 
-  const renderItem = ({ item }) => (
+  const renderItem = ({ item }: { item: ExamScheduleResponse }) => (
     <Animated.View
       style={[
         styles.itemContainer,
-        { opacity: fadeAnim }
+        { opacity: fadeAnim },
       ]}
     >
       <View style={styles.dateContainer}>
-        <Text style={styles.day}>{item.day}</Text>
-        <Text style={styles.month}>{item.month}</Text>
-        <View style={[
-          styles.examTypeBadge,
-          {
-            backgroundColor: getExamTypeColor(item.type),
-            shadowColor: getExamTypeColor(item.type)
-          }
-        ]}>
-          <Text style={styles.examTypeText}>{item.type}</Text>
+        <Text style={styles.day}>{new Date(item.examDate).getDate()}</Text>
+        <Text style={styles.month}>
+          {new Date(item.examDate).toLocaleString("en-US", { month: "short" }).toUpperCase()}
+        </Text>
+        <View
+          style={[
+            styles.examTypeBadge,
+            {
+              backgroundColor: getExamTypeColor(item.subject),
+              shadowColor: getExamTypeColor(item.subject),
+            },
+          ]}
+        >
+          <Text style={styles.examTypeText}>{item.subject}</Text>
         </View>
       </View>
       <View style={styles.subjectContainer}>
@@ -126,37 +63,89 @@ export default function ClassScreen() {
         <View style={styles.metaContainer}>
           <View style={styles.metaItem}>
             <Ionicons name="calendar-outline" size={14} color="#6b7280" />
-            <Text style={styles.metaText}>{item.weekday}</Text>
+            <Text style={styles.metaText}>
+              {new Date(item.examDate).toLocaleString("en-US", { weekday: "long" })}
+            </Text>
           </View>
           <View style={styles.metaItem}>
             <Ionicons name="time-outline" size={14} color="#6b7280" />
-            <Text style={styles.metaText}>{item.time}</Text>
+            <Text style={styles.metaText}>
+              {item.startTime} - {item.endTime}
+            </Text>
           </View>
           <View style={styles.metaItem}>
             <Ionicons name="location-outline" size={14} color="#6b7280" />
-            <Text style={styles.metaText}>{item.location}</Text>
+            <Text style={styles.metaText}>{item.examRoom}</Text>
           </View>
         </View>
       </View>
     </Animated.View>
   );
 
-  const getExamTypeColor = (type) => {
-    const colors = {
-      'Midterm': '#3b82f6',
-      'Final': '#ef4444',
-      'Quiz': '#10b981',
-      'Practical': '#f59e0b'
+  const getExamTypeColor = (subject: string) => {
+    const colors: Record<string, string> = {
+      Math: "#3b82f6",
+      Science: "#ef4444",
+      English: "#10b981",
+      History: "#f59e0b",
     };
-    return colors[type] || '#6b7280';
+    return colors[subject] ?? "#6b7280";
   };
 
-  return (
+  const handleDownload = async () => {
+    try {
+      // Tạo tiêu đề cột và nội dung CSV từ dữ liệu lịch thi
+      const csvHeader = 'Môn học,Ngày thi,Thời gian,Phòng thi\n';
+      const csvContent = examSchedules
+        .map(
+          (schedule) =>
+            `${schedule.subject},${new Date(schedule.examDate).toLocaleDateString()},${schedule.startTime} - ${schedule.endTime},${schedule.examRoom}`
+        )
+        .join('\n');
 
+      // Kết hợp tiêu đề và nội dung
+      const fullCsvContent = csvHeader + csvContent;
+
+      // Đường dẫn tạm thời để lưu tệp
+      const fileUri = FileSystem.documentDirectory + 'exam_schedule.csv';
+
+      // Ghi nội dung CSV vào tệp
+      await FileSystem.writeAsStringAsync(fileUri, fullCsvContent, {
+        encoding: FileSystem.EncodingType.UTF8,
+      });
+
+      // Chia sẻ tệp
+      await Sharing.shareAsync(fileUri);
+    } catch (error) {
+      console.error('Error downloading exam schedule:', error);
+    }
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#06b6d4" />
+        <Text style={styles.loadingText}>Đang tải lịch thi...</Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>{error}</Text>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <Text style={styles.backText}>Quay lại</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  return (
     <View style={styles.container}>
       {/* Header with Gradient */}
       <LinearGradient
-        colors={['#06b6d4', '#0891b2']}
+        colors={["#06b6d4", "#0891b2"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         style={styles.header}
@@ -175,16 +164,15 @@ export default function ClassScreen() {
 
         <View style={styles.headerInfo}>
           <Text style={styles.headerSubtitle}>Kỳ thi học kỳ 1 - 2023</Text>
-          <Text style={styles.headerCount}>{examSchedule.length} bài kiểm tra</Text>
+          <Text style={styles.headerCount}>{examSchedules.length} bài kiểm tra</Text>
         </View>
       </LinearGradient>
 
       <StatusBar barStyle="light-content" />
 
-
       {/* Exam List */}
       <FlatList
-        data={examSchedule}
+        data={examSchedules}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         contentContainerStyle={styles.list}
@@ -195,10 +183,7 @@ export default function ClassScreen() {
       />
 
       {/* Download Button */}
-      <TouchableOpacity
-        style={styles.downloadButton}
-        activeOpacity={0.8}
-      >
+      <TouchableOpacity style={styles.downloadButton} activeOpacity={0.8} onPress={handleDownload}>
         <Ionicons name="download-outline" size={20} color="#fff" />
         <Text style={styles.downloadText}>Tải xuống lịch thi</Text>
       </TouchableOpacity>
@@ -215,8 +200,6 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 20,
     paddingBottom: 20,
     paddingHorizontal: 16,
-    // borderBottomLeftRadius: 20,
-    // borderBottomRightRadius: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
@@ -358,8 +341,33 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     marginLeft: 8,
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f9fafb",
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: "#6b7280",
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f9fafb",
+    padding: 16,
+  },
+  errorText: {
+    fontSize: 16,
+    color: "#ef4444",
+    marginBottom: 16,
+    textAlign: "center",
+  },
+  backText: {
+    fontSize: 14,
+    color: "#06b6d4",
+    textDecorationLine: "underline",
+  },
 });
-
-function getExamTypeColor(type: string): string {
-  throw new Error("Function not implemented.");
-}
