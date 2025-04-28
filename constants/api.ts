@@ -1,8 +1,7 @@
 // export const API_BASE_URL = 'http://10.50.131.248:8080/api';
-//   export const API_BASE_URL = 'http://localhost:8080/api';
+// export const API_BASE_URL = 'http://localhost:8080/api';
 // export const API_BASE_URL = "http://192.168.1.4:8080/api";
-export const API_BASE_URL = "http://10.60.128.97:8080/api";
-
+export const API_BASE_URL = "http://192.168.53.172:8080/api";
 export const API_TIMEOUT = 15000;
 
 export const API_ENDPOINTS = {
@@ -70,9 +69,9 @@ export const API_ENDPOINTS = {
   LEAVE_REQUESTS: {
     GET_ALL: "/leave-requests",
     GET_MY_REQUESTS: "/leave-requests/my",
-    GET_BY_ID: (id: string) => `/leave-requests/${id}`, 
+    GET_BY_ID: (id: string) => `/leave-requests/${id}`,
     CREATE: "/leave-requests",
     UPDATE_STATUS: (id: string) => `/leave-requests/${id}/status`,
-    DELETE: (id: string) => `/leave-requests/${id}`, 
+    DELETE: (id: string) => `/leave-requests/${id}`,
   },
 };
