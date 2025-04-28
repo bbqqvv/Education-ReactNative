@@ -55,6 +55,7 @@ export default function Home() {
       "Vi phạm": "/(stack)/violate",
       TKB: "/(stack)/timetable",
       "Tất cả": "/(stack)/allFeatures",
+      "Điểm danh": "/(stack)/attendance"
     };
 
     if (routes[label]) {
@@ -66,6 +67,7 @@ export default function Home() {
           | "/(stack)/violate"
           | "/(stack)/timetable"
           | "/(stack)/allFeatures"
+          | "/(stack)/attendance"
       );
     } else {
       console.log("Unknown feature:", label);

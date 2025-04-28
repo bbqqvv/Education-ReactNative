@@ -1,7 +1,7 @@
 // export const API_BASE_URL = 'http://10.50.131.248:8080/api';
 //   export const API_BASE_URL = 'http://localhost:8080/api';
 // export const API_BASE_URL = "http://192.168.1.4:8080/api";
-export const API_BASE_URL = "http://10.60.128.97:8080/api";
+export const API_BASE_URL = "http://192.168.53.184:8080/api";
 
 export const API_TIMEOUT = 15000;
 
@@ -74,5 +74,12 @@ export const API_ENDPOINTS = {
     CREATE: "/leave-requests",
     UPDATE_STATUS: (id: string) => `/leave-requests/${id}/status`,
     DELETE: (id: string) => `/leave-requests/${id}`, 
+  },
+  ATTENDANCE: {
+    RECORD: "/attendance/record",            // POST - ghi nhận điểm danh
+    BULK_RECORD: "/attendance/bulk-record",   // POST - ghi nhận nhiều điểm danh
+    GET_BY_CLASS: "/attendance/class",        // GET - lấy danh sách điểm danh theo lớp
+    GET_BY_STUDENT: "/attendance/student",    // GET - lấy danh sách điểm danh theo học sinh
+    GET_BY_DATE_RANGE: "/attendance/date-range", // GET - lấy danh sách điểm danh theo khoảng ngày
   },
 };

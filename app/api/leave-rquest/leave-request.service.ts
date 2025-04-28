@@ -25,21 +25,29 @@ import {
     async create(data: CreateLeaveRequestRequest): Promise<LeaveRequestResponse> {
       const token = await SecureStore.getItemAsync('authToken');
       const formData = new FormData();
-      
-      // Append các trường dữ liệu
+    
       Object.entries(data).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
-          // Xử lý đặc biệt cho file ảnh
-          if (key === 'imageFile' && value instanceof File) {
-            formData.append(key, value, value.name);
-          } else {
+          if (key === 'imageFile' && typeof value === 'object' && value.uri) {
+            formData.append(key, {
+              uri: value.uri,
+              name: value.name || 'image.jpg',
+              type: value.type || 'image/jpeg',
+            } as any);  // React Native FormData cần cast kiểu
+          } 
+          else if (key === 'fromDate' || key === 'toDate') {
+            // Nếu là ngày, thì format chuẩn yyyy-MM-dd
+            const dateStr = (typeof value === 'string') ? value : new Date(value).toISOString().split('T')[0];
+            formData.append(key, dateStr);
+          }
+          else {
             formData.append(key, value.toString());
           }
         }
       });
-  
+    
       const response = await apiClient.post(
-        API_ENDPOINTS.LEAVE_REQUESTS.CREATE, 
+        API_ENDPOINTS.LEAVE_REQUESTS.CREATE,
         formData,
         {
           headers: {
@@ -50,6 +58,7 @@ import {
       );
       return response.data;
     },
+    
   
     /**
      * Cập nhật trạng thái đơn xin nghỉ
