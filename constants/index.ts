@@ -60,6 +60,7 @@ export const features = [
     { icon: icons.Violate, label: "Vi phạm" },
     { icon: icons.Note, label: "Xin nghỉ" },
     { icon: icons.allFeatures, label: "Tất cả" },
+    { icon: icons.examTime, label: "Điểm danh" },
 ];
 
 export const quotes = [
