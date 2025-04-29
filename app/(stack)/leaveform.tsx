@@ -11,6 +11,7 @@ import {
   Alert,
   Image,
   ActivityIndicator,
+  StatusBar
 } from 'react-native';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
@@ -82,11 +83,11 @@ const LeaveApplication = () => {
       Alert.alert('Thiếu thông tin', 'Vui lòng điền đầy đủ thông tin bắt buộc');
       return;
     }
-
+  
     try {
       setIsLoading(true);
       console.log('Submitting form:', formData);
-
+  
       const formDataToSend = new FormData();
       Object.entries(formData).forEach(([key, value]) => {
         if (value !== null && value !== undefined) {
@@ -101,15 +102,15 @@ const LeaveApplication = () => {
           }
         }
       });
-
+  
       // Log FormData entries
-    for (let pair of (formDataToSend as any)._parts) {
-      console.log(`FormData entry: ${pair[0]} = ${pair[1]}`);
-    }
-
+      for (let [key, value] of formDataToSend.entries()) {
+        console.log(`FormData entry: ${key} = ${value}`);
+      }
+  
       const response = await LeaveRequestApi.create(formDataToSend);
       console.log('Response:', response);
-
+  
       if (response.success) {
         Alert.alert('Thành công', 'Đơn xin nghỉ đã được gửi');
         router.back();

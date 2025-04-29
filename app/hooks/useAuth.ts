@@ -6,7 +6,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const useAuth = () => {
     const dispatch = useDispatch<AppDispatch>();
-    const { token, user } = useSelector((state: RootState) => state.auth);
+    const authState = useSelector((state: RootState) => state.auth);
 
     useEffect(() => {
         const initAuth = async () => {
@@ -14,7 +14,7 @@ export const useAuth = () => {
                 const storedToken = await AsyncStorage.getItem('authToken');
                 console.log("Stored token from AsyncStorage:", storedToken); // ✅
 
-                if (storedToken && (!token || !user)) {
+                if (storedToken && (!authState.token || !authState.user)) {
                     console.log("Dispatching setToken()..."); // ✅
                     // Dispatch setToken nếu chưa có token trong Redux store
                     dispatch(setToken(storedToken));
@@ -29,8 +29,16 @@ export const useAuth = () => {
         };
 
         // Kiểm tra token và user, chỉ gọi initAuth khi chưa có token hoặc user
-        if (!token && !user) {
+        if (!authState.token && !authState.user) {
             initAuth();
         }
-    }, [token, user, dispatch]);
+    }, [authState.token, authState.user, dispatch]);
+    // Trả về các giá trị cần thiết
+    return {
+        role: authState.user?.role, // ROLE_STUDENT, ROLE_TEACHER, etc.
+        user: authState.user,
+        token: authState.token,
+        isLoading: authState.loading,
+        error: authState.error
+    };
 };

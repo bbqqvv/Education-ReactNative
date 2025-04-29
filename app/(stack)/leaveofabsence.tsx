@@ -18,6 +18,7 @@ import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { LeaveRequestApi } from '@/app/api/leave-rquest/leave-request.service';
 import { LeaveRequest, LeaveRequestStatus } from '@/app/api/leave-rquest/leave-request.type';
+import { useAuth } from '@/app/hooks/useAuth';
 
 // Types
 type LeaveStatus = 'approved' | 'pending' | 'rejected';
@@ -170,6 +171,7 @@ const FilterTab = React.memo(({
 // Main Component
 const LeaveList = () => {
   const router = useRouter();
+  const { role, user, isLoading: authLoading } = useAuth();
   const [leaveRequests, setLeaveRequests] = useState<LeaveApplication[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -178,8 +180,17 @@ const LeaveList = () => {
 
   const fetchLeaveRequests = async () => {
     try {
-      const response = await LeaveRequestApi.getAll();
 
+      let response;
+
+      // Phân quyền theo role
+      if (role === 'ROLE_STUDENT' || role === 'ROLE_TEACHER') {
+        response = await LeaveRequestApi.getMyRequests(); // Chỉ xem đơn của chính mình
+      } else if (role === 'ROLE_ADMIN') {
+        response = await LeaveRequestApi.getAll(); // ADMIN xem tất cả đơn
+      } else {
+        throw new Error('Không có quyền truy cập');
+      }
       if (response.success) {
         const mappedData = response.data?.map((item: LeaveRequest) => ({
           ...item,
@@ -224,7 +235,15 @@ const LeaveList = () => {
   }, [activeStatus, leaveRequests]);
 
   const handleBack = () => router.back();
-  const handleCreateLeave = () => router.push('/(stack)/leaveform');
+
+  const handleCreateLeave = () => {
+    // Cho phép cả STUDENT và TEACHER tạo đơn
+    if (role === 'ROLE_STUDENT' || role === 'ROLE_TEACHER') {
+      router.push('/(stack)/leaveform');
+    } else {
+      alert('Bạn không có quyền tạo đơn xin nghỉ');
+    }
+  };
 
   if (loading && !refreshing) {
     return (
@@ -264,7 +283,11 @@ const LeaveList = () => {
           >
             <Ionicons name="arrow-back" size={24} color="#fff" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Đơn Xin Nghỉ</Text>
+          <Text style={styles.headerTitle}>
+            {role === 'ROLE_STUDENT'
+              ? `Đơn xin nghỉ của ${user?.name || 'bạn'}`
+              : 'Quản lý đơn xin nghỉ'}
+          </Text>
           <View style={styles.headerRight} />
         </View>
       </LinearGradient>
@@ -314,14 +337,16 @@ const LeaveList = () => {
       />
 
       {/* Create New Leave Button */}
-      <TouchableOpacity
-        style={styles.createButton}
-        onPress={handleCreateLeave}
-        activeOpacity={0.8}
-      >
-        <Ionicons name="add" size={24} color="#fff" />
-        <Text style={styles.createButtonText}>Tạo đơn xin nghỉ mới</Text>
-      </TouchableOpacity>
+      {(role === 'ROLE_STUDENT' || role === 'ROLE_TEACHER') && (
+        <TouchableOpacity
+          style={styles.createButton}
+          onPress={handleCreateLeave}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="add" size={24} color="#fff" />
+          <Text style={styles.createButtonText}>Tạo đơn xin nghỉ mới</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 };
