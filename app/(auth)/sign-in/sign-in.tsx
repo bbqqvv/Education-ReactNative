@@ -26,10 +26,8 @@ export default function LoginPage() {
   const [isBiometricSupported, setIsBiometricSupported] = useState(false);
   const [biometricType, setBiometricType] = useState<string | null>(null);
   const [localError, setLocalError] = useState("");
-
   const dispatch: AppDispatch = useDispatch();
   const { token, loading, error } = useSelector((state: RootState) => state.auth);
-
   useEffect(() => {
     if (token) {
       router.replace("/(tabs)/home");

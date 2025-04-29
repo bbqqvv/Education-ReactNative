@@ -1,11 +1,8 @@
 // export const API_BASE_URL = 'http://10.50.131.248:8080/api';
 // export const API_BASE_URL = 'http://localhost:8080/api';
 // export const API_BASE_URL = "http://192.168.1.4:8080/api";
-
-export const API_BASE_URL = "http://192.168.53.184:8080/api";
-
+export const API_BASE_URL = "http://192.168.1.37:8080/api";
 export const API_TIMEOUT = 15000;
-
 export const API_ENDPOINTS = {
   AUTH: {
     REGISTER: "/auth/register",
