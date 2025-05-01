@@ -1,25 +1,19 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import AsyncStorage from '@react-native-async-storage/async-storage';  // Thay SecureStore bằng AsyncStorage
-import { AuthenticationRequest, JwtResponse, UserResponse } from '@/app/api/auth/auth.types';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { AuthenticationRequest, JwtResponse } from '@/app/api/auth/auth.types';
 import { AuthApi } from '@/app/api/auth/auth.service';
 import { UserApi } from '@/app/api/user/user.service';
+import { UserResponse } from '@/app/api/user/user.type';
 
-// Định nghĩa kiểu dữ liệu UserInfo và AuthState
-type UserInfo = {
-    fullName: string;
-    email?: string;
-    studentCode: string;
-    studentClass: string;
-    role: string;
-};
-
+// Redux state type
 type AuthState = {
     token: string | null;
-    user: UserInfo | null;
+    user: UserResponse | null;
     loading: boolean;
     error: string | null;
 };
 
+// Initial state
 const initialState: AuthState = {
     token: null,
     user: null,
@@ -27,50 +21,45 @@ const initialState: AuthState = {
     error: null,
 };
 
-// Đăng nhập
+// Async thunk: login
 export const loginUser = createAsyncThunk<JwtResponse, AuthenticationRequest, { rejectValue: string }>(
     'auth/loginUser',
     async (data, thunkAPI) => {
         try {
             const response = await AuthApi.login(data);
-            await AsyncStorage.setItem('authToken', response.token);  // Lưu token vào AsyncStorage
-            console.log("Token:", response)
+            await AsyncStorage.setItem('authToken', response.token);
             return response;
         } catch (err) {
-            console.log("Login error:", err);
+            console.error("Login error:", err);
             return thunkAPI.rejectWithValue("Đăng nhập thất bại");
         }
     }
 );
 
-// Lấy thông tin người dùng
+// Async thunk: fetch current user
 export const fetchUserInfo = createAsyncThunk<UserResponse, void, { rejectValue: string }>(
     'auth/fetchUserInfo',
     async (_, thunkAPI) => {
-        console.log("⚡ fetchUserInfo thunk được gọi"); // ✅
         try {
             const response = await UserApi.getCurrentUser();
-            console.log("📥 API response from getCurrentUser:", response); // ✅
-
             if (!response || !response.data) {
-                return thunkAPI.rejectWithValue('Không có dữ liệu người dùng');
+                return thunkAPI.rejectWithValue("Không có dữ liệu người dùng");
             }
             return response.data;
         } catch (err) {
-            console.error("❌ fetchUserInfo error:", err); // ✅
-            return thunkAPI.rejectWithValue('Không thể lấy thông tin người dùng');
+            console.error("Fetch user error:", err);
+            return thunkAPI.rejectWithValue("Không thể lấy thông tin người dùng");
         }
     }
 );
 
-
-// Đăng xuất
+// Async thunk: logout
 export const logoutUser = createAsyncThunk('auth/logoutUser', async () => {
-    await AsyncStorage.removeItem('authToken');  // Xóa token từ AsyncStorage
+    await AsyncStorage.removeItem('authToken');
     return true;
 });
 
-
+// Create slice
 const authSlice = createSlice({
     name: 'auth',
     initialState,
@@ -78,13 +67,12 @@ const authSlice = createSlice({
         setToken: (state, action: PayloadAction<string | null>) => {
             state.token = action.payload;
         },
-        setUser: (state, action: PayloadAction<UserInfo | null>) => {
+        setUser: (state, action: PayloadAction<UserResponse | null>) => {
             state.user = action.payload;
         },
     },
     extraReducers: (builder) => {
         builder
-            // Đăng nhập
             .addCase(loginUser.pending, (state) => {
                 state.loading = true;
                 state.error = null;
@@ -95,32 +83,24 @@ const authSlice = createSlice({
             })
             .addCase(loginUser.rejected, (state, action) => {
                 state.loading = false;
-                state.error = action.payload ?? 'Lỗi không xác định';
+                state.error = action.payload ?? "Lỗi không xác định";
             })
 
-            // Lấy thông tin người dùng
             .addCase(fetchUserInfo.pending, (state) => {
                 state.loading = true;
             })
             .addCase(fetchUserInfo.fulfilled, (state, action) => {
                 state.loading = false;
                 state.user = action.payload;
-                state.user = {
-                    fullName: action.payload.fullName,
-                    email: action.payload.email,
-                    studentCode: action.payload.studentCode,
-                    studentClass: action.payload.studentClass,
-                    role: action.payload.role,
-                };
             })
             .addCase(fetchUserInfo.rejected, (state, action) => {
                 state.loading = false;
                 state.token = null;
                 state.user = null;
-                AsyncStorage.removeItem('authToken');  // Xóa token nếu không lấy được user info
-                state.error = action.payload ?? 'Không thể lấy thông tin người dùng';
+                AsyncStorage.removeItem('authToken');
+                state.error = action.payload ?? "Không thể lấy thông tin người dùng";
             })
-            // Đăng xuất
+
             .addCase(logoutUser.fulfilled, (state) => {
                 state.token = null;
                 state.user = null;
@@ -129,6 +109,6 @@ const authSlice = createSlice({
     },
 });
 
-// Export actions và reducer
+// Export actions & reducer
 export const { setToken, setUser } = authSlice.actions;
 export default authSlice.reducer;

@@ -1,7 +1,8 @@
-import { AuthenticationRequest, JwtResponse, OtpRequest, OtpResponse, OtpVerificationRequest, OtpVerificationResponse, ResetPasswordRequest, ResetPasswordResponse, UserCreationRequest, UserResponse } from './auth.types';
+import { AuthenticationRequest, JwtResponse, OtpRequest, OtpResponse, OtpVerificationRequest, OtpVerificationResponse, ResetPasswordRequest, ResetPasswordResponse, UserCreationRequest } from './auth.types';
 import { ApiResponse } from '../api-response';
 import { API_ENDPOINTS } from '@/constants/api';
 import apiClient from '../apiClient';
+import { UserResponse } from '../user/user.type';
 
 
 export const AuthApi = {
