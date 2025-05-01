@@ -4,6 +4,7 @@ import { useRouter, useRootNavigationState } from 'expo-router';
 import { useAuth } from './hooks/useAuth';
 import { useSelector } from 'react-redux';
 import { RootState } from './store/store';
+import React from 'react';
 
 const Page = () => {
   const { token, loading } = useSelector((state: RootState) => state.auth);

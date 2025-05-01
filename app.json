@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Edu",
-    "slug": "edu",
+    "slug": "EduAPP",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/logo-app.png",
@@ -10,7 +10,11 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.vanbui262004.EduAPP"
+      "bundleIdentifier": "com.vanbui262004.EduAPP",
+      "infoPlist": {
+        "NSFaceIDUsageDescription": "Ứng dụng cần sử dụng Face ID để xác thực người dùng.",
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -25,7 +29,6 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
-      
       "expo-router",
       [
         "expo-splash-screen",
