@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useEffect, useMemo, useCallback } from "react";
+import { useUser } from "../hooks/useUser";
 import {
     View,
     Text,
@@ -15,83 +16,31 @@ import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
+import { UserResponse } from "../api/user/user.type";
+import { useRouter } from "expo-router";
 
-interface UserProfile {
-    id: string;
-    fullName: string;
-    userCode: string;
-    studentClass?: string;
-    teachingClasses?: string[];
-    role: string;
-    profile?: {
-        phoneNumber?: string;
-        dateOfBirth?: string;
-        gender?: string;
-        address?: string;
-    };
-    email: string;
-}
+const PersonalInfoScreen: React.FC = () => {
+    const { currentUser, loading, refresh } = useUser();
+    const router = useRouter();
 
-interface PersonalInfoScreenProps {
-    user?: UserProfile;
-    isLoading?: boolean;
-    onEditPress?: () => void;
-    onBackPress?: () => void;
-}
+    useEffect(() => {
+        refresh();
+    }, [refresh]);
 
-const PersonalInfoScreen: React.FC<PersonalInfoScreenProps> = ({
-    user,
-    isLoading = false,
-    onEditPress,
-    onBackPress,
-}) => {
-    const safeUser: UserProfile = user || {
-        id: '',
-        fullName: 'Người dùng',
-        userCode: '',
-        role: 'ROLE_STUDENT',
-        email: '',
-        profile: {},
-    };
-
-    const handleCallPress = (phoneNumber?: string) => {
-        if (phoneNumber) {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            Linking.openURL(`tel:${phoneNumber}`);
+    const handleEditPress = useCallback(() => {
+        if (currentUser) {
+            router.push({
+                pathname: "/(stack)/edit-profile-screen",
+                params: { user: JSON.stringify(currentUser) },
+            });
         }
-    };
+    }, [router, currentUser]);
 
-    const handleEmailPress = () => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        Linking.openURL(`mailto:${safeUser.email}`);
-    };
+    const handleBackPress = useCallback(() => {
+        console.log("Back button pressed");
+    }, []);
 
-    const handleEdit = () => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        onEditPress?.();
-    };
-
-    const handleBack = () => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        onBackPress?.();
-    };
-
-    const formatDate = (date?: string) => {
-        return date ? format(new Date(date), "dd/MM/yyyy", { locale: vi }) : "Chưa cập nhật";
-    };
-
-    const getRoleLabel = () => {
-        return safeUser.role === "ROLE_TEACHER" ? "Giáo viên" : "Học sinh";
-    };
-
-    const getClassLabel = () => {
-        if (safeUser.role === "ROLE_TEACHER") {
-            return safeUser.teachingClasses?.join(", ") || "Chưa có lớp";
-        }
-        return safeUser.studentClass || "Chưa có lớp";
-    };
-
-    if (isLoading) {
+    if (loading) {
         return (
             <View style={styles.loadingContainer}>
                 <ActivityIndicator size="large" color="#4e83ff" />
@@ -100,12 +49,54 @@ const PersonalInfoScreen: React.FC<PersonalInfoScreenProps> = ({
     }
 
     return (
+        <PersonalInfoScreenContent
+            user={currentUser}
+            onEditPress={handleEditPress}
+            onBackPress={handleBackPress}
+        />
+    );
+};
+
+const PersonalInfoScreenContent: React.FC<{
+    user: UserResponse | null;
+    onEditPress: () => void;
+    onBackPress: () => void;
+}> = ({ user, onEditPress, onBackPress }) => {
+    const safeUser = useMemo(() => {
+        return (
+            user || {
+                id: "",
+                fullName: "Người dùng",
+                userCode: "",
+                role: "ROLE_STUDENT",
+                email: "",
+                profile: {
+                    dateOfBirth: undefined,
+                    gender: undefined,
+                    phoneNumber: undefined,
+                    address: undefined,
+                    fatherName: undefined,
+                    motherName: undefined,
+                    fatherPhoneNumber: undefined,
+                    motherPhoneNumber: undefined,
+                },
+                teachingClasses: [],
+                studentClass: "Chưa có lớp",
+            }
+        );
+    }, [user]);
+
+    const formatDate = useCallback((date?: string) => {
+        return date ? format(new Date(date), "dd/MM/yyyy", { locale: vi }) : "Chưa cập nhật";
+    }, []);
+
+    return (
         <LinearGradient colors={["#f0f4ff", "#e6f0ff"]} style={styles.container}>
-            {/* Header with shadow */}
+            {/* Header */}
             <View style={styles.headerContainer}>
                 <View style={styles.header}>
                     <TouchableOpacity
-                        onPress={handleBack}
+                        onPress={onBackPress}
                         style={styles.backButton}
                         activeOpacity={0.7}
                     >
@@ -115,7 +106,7 @@ const PersonalInfoScreen: React.FC<PersonalInfoScreenProps> = ({
                     <Text style={styles.headerTitle}>Hồ sơ cá nhân</Text>
 
                     <TouchableOpacity
-                        onPress={handleEdit}
+                        onPress={onEditPress}
                         style={styles.editButton}
                         activeOpacity={0.7}
                     >
@@ -125,11 +116,9 @@ const PersonalInfoScreen: React.FC<PersonalInfoScreenProps> = ({
                 </View>
             </View>
 
-            <ScrollView
-                contentContainerStyle={styles.scrollContainer}
-                showsVerticalScrollIndicator={false}
-            >
-                {/* Avatar and Basic Info */}
+            {/* Nội dung */}
+            <ScrollView contentContainerStyle={styles.scrollContainer}>
+                {/* Avatar và thông tin cơ bản */}
                 <View style={styles.avatarContainer}>
                     <View style={styles.avatarWrapper}>
                         <Image
@@ -140,32 +129,14 @@ const PersonalInfoScreen: React.FC<PersonalInfoScreenProps> = ({
                             }}
                             style={styles.avatar}
                         />
-                        <View style={styles.avatarBadge}>
-                            <MaterialCommunityIcons
-                                name={safeUser.role === "ROLE_TEACHER" ? "teach" : "school"}
-                                size={16}
-                                color="#fff"
-                            />
-                        </View>
                     </View>
                     <View style={styles.nameContainer}>
-                        <Text style={styles.name} numberOfLines={2} ellipsizeMode="tail">
-                            {safeUser.fullName}
-                        </Text>
+                        <Text style={styles.name}>{safeUser.fullName}</Text>
                         <Text style={styles.userCode}>{safeUser.userCode || "Chưa có mã"}</Text>
-
-                        <View style={styles.tagsContainer}>
-                            <View style={[styles.tag, styles.roleTag]}>
-                                <Text style={styles.tagText}>{getRoleLabel()}</Text>
-                            </View>
-                            <View style={[styles.tag, styles.classTag]}>
-                                <Text style={styles.tagText}>{getClassLabel()}</Text>
-                            </View>
-                        </View>
                     </View>
                 </View>
 
-                {/* Personal Info Section */}
+                {/* Thông tin cá nhân */}
                 <View style={styles.card}>
                     <View style={styles.cardHeader}>
                         <MaterialCommunityIcons
@@ -175,88 +146,69 @@ const PersonalInfoScreen: React.FC<PersonalInfoScreenProps> = ({
                         />
                         <Text style={styles.sectionTitle}>Thông tin cá nhân</Text>
                     </View>
-
-                    <InfoRow
-                        icon="account"
-                        label="Họ và tên"
-                        value={safeUser.fullName}
-                    />
-
+                    <InfoRow icon="account" label="Họ và tên" value={safeUser.fullName} />
                     <InfoRow
                         icon="calendar"
                         label="Ngày sinh"
                         value={formatDate(safeUser.profile?.dateOfBirth)}
                     />
-
                     <InfoRow
                         icon="gender-male-female"
                         label="Giới tính"
                         value={safeUser.profile?.gender || "Chưa cập nhật"}
                     />
-                </View>
-
-                {/* Contact Info Section */}
-                <View style={styles.card}>
-                    <View style={styles.cardHeader}>
-                        <MaterialCommunityIcons name="contacts" size={20} color="#4e83ff" />
-                        <Text style={styles.sectionTitle}>Liên hệ</Text>
-                    </View>
-
-                    <TouchableOpacity
-                        onPress={handleEmailPress}
-                        activeOpacity={0.7}
-                    >
-                        <InfoRow
-                            icon="email"
-                            label="Email"
-                            value={safeUser.email}
-                            isPressable
-                        />
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                        onPress={() => handleCallPress(safeUser.profile?.phoneNumber)}
-                        activeOpacity={0.7}
-                    >
-                        <InfoRow
-                            icon="phone"
-                            label="Điện thoại"
-                            value={safeUser.profile?.phoneNumber || "Chưa cập nhật"}
-                            isPressable={!!safeUser.profile?.phoneNumber}
-                        />
-                    </TouchableOpacity>
-
                     <InfoRow
-                        icon="map-marker"
+                        icon="home"
                         label="Địa chỉ"
                         value={safeUser.profile?.address || "Chưa cập nhật"}
                     />
                 </View>
 
-                {/* Class Information */}
+                {/* Thông tin liên hệ */}
                 <View style={styles.card}>
                     <View style={styles.cardHeader}>
-                        <MaterialCommunityIcons
-                            name={safeUser.role === "ROLE_TEACHER" ? "teach" : "school"}
-                            size={20}
-                            color="#4e83ff"
-                        />
-                        <Text style={styles.sectionTitle}>
-                            {safeUser.role === "ROLE_TEACHER" ? "Lớp giảng dạy" : "Lớp học"}
-                        </Text>
+                        <MaterialCommunityIcons name="contacts" size={20} color="#4e83ff" />
+                        <Text style={styles.sectionTitle}>Liên hệ</Text>
                     </View>
-
                     <InfoRow
-                        icon="account-group"
-                        label={
-                            safeUser.role === "ROLE_TEACHER" ? "Các lớp phụ trách" : "Lớp hiện tại"
-                        }
-                        value={getClassLabel()}
+                        icon="phone"
+                        label="Số điện thoại"
+                        value={safeUser.profile?.phoneNumber || "Chưa cập nhật"}
+                    />
+                    <InfoRow
+                        icon="email"
+                        label="Email"
+                        value={safeUser.email || "Chưa cập nhật"}
                     />
                 </View>
 
-                {/* Bottom padding */}
-                <View style={{ height: 30 }} />
+                {/* Thông tin gia đình */}
+                <View style={styles.card}>
+                    <View style={styles.cardHeader}>
+                        <MaterialCommunityIcons name="account-group" size={20} color="#4e83ff" />
+                        <Text style={styles.sectionTitle}>Thông tin gia đình</Text>
+                    </View>
+                    <InfoRow
+                        icon="account"
+                        label="Tên cha"
+                        value={safeUser.profile?.fatherName || "Chưa cập nhật"}
+                    />
+                    <InfoRow
+                        icon="phone"
+                        label="Số điện thoại cha"
+                        value={safeUser.profile?.fatherPhoneNumber || "Chưa cập nhật"}
+                    />
+                    <InfoRow
+                        icon="account"
+                        label="Tên mẹ"
+                        value={safeUser.profile?.motherName || "Chưa cập nhật"}
+                    />
+                    <InfoRow
+                        icon="phone"
+                        label="Số điện thoại mẹ"
+                        value={safeUser.profile?.motherPhoneNumber || "Chưa cập nhật"}
+                    />
+                </View>
             </ScrollView>
         </LinearGradient>
     );
@@ -266,29 +218,14 @@ const InfoRow: React.FC<{
     icon: string;
     label: string;
     value: string;
-    isPressable?: boolean;
-}> = ({ icon, label, value, isPressable = false }) => (
+}> = ({ icon, label, value }) => (
     <View style={styles.infoRow}>
         <View style={styles.infoIcon}>
-            <MaterialCommunityIcons
-                name={icon}
-                size={22}
-                color={isPressable ? "#4e83ff" : "#64748b"}
-            />
+            <MaterialCommunityIcons name={icon} size={22} color="#64748b" />
         </View>
         <View style={styles.infoContent}>
             <Text style={styles.infoLabel}>{label}</Text>
-            <Text
-                style={[
-                    styles.infoValue,
-                    isPressable && styles.pressableText,
-                    !value && styles.emptyValue
-                ]}
-                numberOfLines={2}
-                ellipsizeMode="tail"
-            >
-                {value || "Chưa cập nhật"}
-            </Text>
+            <Text style={styles.infoValue}>{value}</Text>
         </View>
     </View>
 );
@@ -378,19 +315,6 @@ const styles = StyleSheet.create({
         borderWidth: 4,
         borderColor: "#fff",
         backgroundColor: "#f1f5f9",
-    },
-    avatarBadge: {
-        position: 'absolute',
-        bottom: 0,
-        right: 0,
-        backgroundColor: '#4e83ff',
-        width: 32,
-        height: 32,
-        borderRadius: 16,
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderWidth: 2,
-        borderColor: '#fff',
     },
     nameContainer: {
         marginLeft: 20,

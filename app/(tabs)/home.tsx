@@ -54,7 +54,7 @@ export default function Home() {
       "Xin nghỉ": "/(stack)/leaveofabsence",
       "Vi phạm": "/(stack)/violate",
       TKB: "/(stack)/timetable",
-      "Tất cả": "/(stack)/allFeatures",
+      // "Tất cả": "/(stack)/allFeatures",
       "Điểm danh": "/(stack)/attendance"
     };
 

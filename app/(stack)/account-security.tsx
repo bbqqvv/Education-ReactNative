@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View,
     Text,
@@ -12,10 +12,13 @@ import {
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons, Feather, MaterialIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import * as LocalAuthentication from 'expo-local-authentication';
 import { LinearGradient } from 'expo-linear-gradient';
 
 const AccountSecurity = () => {
     const [isBiometricEnabled, setIsBiometricEnabled] = useState(false);
+    const [isBiometricSupported, setIsBiometricSupported] = useState(false);
+    const [biometricType, setBiometricType] = useState<string | null>(null);
     const [isTwoFactorEnabled, setIsTwoFactorEnabled] = useState(true);
     const [isLoading, setIsLoading] = useState(false);
     const [activeDevices, setActiveDevices] = useState([
@@ -24,9 +27,58 @@ const AccountSecurity = () => {
         { id: '3', name: 'Samsung Galaxy S22', os: 'Android', lastActive: '1 tuần trước', current: false },
     ]);
 
-    const toggleBiometric = () => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        setIsBiometricEnabled(prev => !prev);
+    useEffect(() => {
+        const checkBiometricSupport = async () => {
+            const compatible = await LocalAuthentication.hasHardwareAsync();
+            setIsBiometricSupported(compatible);
+
+            if (compatible) {
+                const enrolled = await LocalAuthentication.isEnrolledAsync();
+                if (!enrolled) {
+                    setIsBiometricSupported(false);
+                    return;
+                }
+
+                const types = await LocalAuthentication.supportedAuthenticationTypesAsync();
+                if (types.includes(LocalAuthentication.AuthenticationType.FACIAL_RECOGNITION)) {
+                    setBiometricType("Face ID");
+                } else if (types.includes(LocalAuthentication.AuthenticationType.FINGERPRINT)) {
+                    setBiometricType("Vân tay");
+                } else {
+                    setBiometricType(null);
+                }
+            }
+        };
+
+        checkBiometricSupport();
+    }, []);
+
+    const toggleBiometric = async () => {
+        if (!isBiometricSupported) {
+            Alert.alert("Không hỗ trợ", "Thiết bị của bạn không hỗ trợ sinh trắc học.");
+            return;
+        }
+
+        if (!isBiometricEnabled) {
+            const result = await LocalAuthentication.authenticateAsync({
+                promptMessage: `Kích hoạt ${biometricType || "sinh trắc học"}`,
+                fallbackLabel: "Sử dụng mật khẩu",
+                disableDeviceFallback: false, // Đảm bảo fallback không bị vô hiệu hóa
+            });
+            console.log(result);
+
+            if (result.success) {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setIsBiometricEnabled(true);
+                Alert.alert("Thành công", `${biometricType || "Sinh trắc học"} đã được kích hoạt.`);
+            } else {
+                Alert.alert("Thất bại", "Không thể kích hoạt sinh trắc học.");
+            }
+        } else {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            setIsBiometricEnabled(false);
+            Alert.alert("Đã tắt", `${biometricType || "Sinh trắc học"} đã được tắt.`);
+        }
     };
 
     const toggleTwoFactor = () => {
@@ -114,8 +166,8 @@ const AccountSecurity = () => {
 
                     <SecurityOption
                         icon="fingerprint"
-                        title="Mở khóa bằng vân tay/face ID"
-                        description="Sử dụng sinh trắc học để đăng nhập nhanh hơn"
+                        title={`Mở khóa bằng ${biometricType || "sinh trắc học"}`}
+                        description={`Sử dụng ${biometricType || "sinh trắc học"} để đăng nhập nhanh hơn`}
                         rightComponent={
                             <Switch
                                 value={isBiometricEnabled}
