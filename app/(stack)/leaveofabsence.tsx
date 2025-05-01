@@ -180,6 +180,7 @@ const LeaveList = () => {
 
   const fetchLeaveRequests = async () => {
     try {
+
       let response;
 
       // Phân quyền theo role
@@ -190,7 +191,6 @@ const LeaveList = () => {
       } else {
         throw new Error('Không có quyền truy cập');
       }
-      
       if (response.success) {
         const mappedData = response.data?.map((item: LeaveRequest) => ({
           ...item,
@@ -284,8 +284,8 @@ const LeaveList = () => {
             <Ionicons name="arrow-back" size={24} color="#fff" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>
-            {role === 'ROLE_STUDENT' 
-              ? `Đơn xin nghỉ của ${user?.name || 'bạn'}` 
+            {role === 'ROLE_STUDENT'
+              ? `Đơn xin nghỉ của ${user?.name || 'bạn'}`
               : 'Quản lý đơn xin nghỉ'}
           </Text>
           <View style={styles.headerRight} />
@@ -327,8 +327,8 @@ const LeaveList = () => {
             <Ionicons name="file-tray" size={48} color="#D1D5DB" />
             <Text style={styles.emptyText}>Không có đơn nào</Text>
             <Text style={styles.emptySubtext}>
-              {activeStatus === 'all' 
-                ? 'Bạn chưa có đơn xin nghỉ nào' 
+              {activeStatus === 'all'
+                ? 'Bạn chưa có đơn xin nghỉ nào'
                 : `Không có đơn ở trạng thái ${getStatusText(activeStatus)}`}
             </Text>
           </View>

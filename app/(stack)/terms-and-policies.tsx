@@ -8,6 +8,7 @@ import {
   Linking,
 } from "react-native";
 import { MaterialIcons, Feather, AntDesign } from "@expo/vector-icons";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const TermsAndPoliciesScreen = () => {
   const [activeTab, setActiveTab] = useState("terms");
@@ -107,7 +108,7 @@ const TermsAndPoliciesScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerText}>Điều khoản & Chính sách</Text>
@@ -197,7 +198,7 @@ const TermsAndPoliciesScreen = () => {
           </View>
         </ScrollView>
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 

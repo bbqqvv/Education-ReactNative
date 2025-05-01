@@ -31,6 +31,7 @@ const RateAppScreen = () => {
   };
 
   return (
+
     <ScrollView
       contentContainerStyle={styles.container}
       showsVerticalScrollIndicator={false}

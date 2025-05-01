@@ -29,8 +29,8 @@ const Setting = () => {
   };
 
   const user = {
-    name: "Seven Kay",
-    email: "seven.kay@example.com",
+    name: "Bùi Quốc Văn",
+    email: "vanbui262004@gmail.com",
   };
 
   const menuSections = [

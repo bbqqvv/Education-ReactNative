@@ -38,3 +38,5 @@ export interface UpdateLeaveRequestStatusRequest {
 // Response types
 export type LeaveRequestsResponse = ApiResponse<LeaveRequest[]>;
 export type LeaveRequestResponse = ApiResponse<LeaveRequest>;
+
+
